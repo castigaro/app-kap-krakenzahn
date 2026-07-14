@@ -19,6 +19,7 @@ class Ambience(private val context: Context) {
 
     private var track: AudioTrack? = null
     private var current: LocationId? = null
+    private var ducked = false
 
     /** Wechselt die Ambiente auf den Ort (nichts tun, wenn schon aktiv). */
     fun switchTo(location: LocationId) {
@@ -26,11 +27,27 @@ class Ambience(private val context: Context) {
             stop()
             return
         }
-        if (location == current && track != null) return
+        if (location == current && track != null) {
+            applyVolume()
+            return
+        }
         stop()
         current = location
         val pcm = loopFor(location)
         runCatching { startLoop(pcm) }
+    }
+
+    /** Senkt die Lautstärke ab, solange gesprochen wird (Ducking). */
+    fun duck(on: Boolean) {
+        if (ducked == on) return
+        ducked = on
+        applyVolume()
+    }
+
+    /** Wendet die eingestellte Lautstärke auf den laufenden Track an. */
+    fun applyVolume() {
+        val gain = AppSettings.ambienceVolume(context) * (if (ducked) DUCK_FACTOR else 1f)
+        runCatching { track?.setVolume(gain) }
     }
 
     fun stop() {
@@ -63,9 +80,9 @@ class Ambience(private val context: Context) {
             .build()
         t.write(pcm, 0, pcm.size)
         t.setLoopPoints(0, pcm.size, -1)
-        t.setVolume(0.35f)
-        t.play()
         track = t
+        applyVolume()
+        t.play()
     }
 
     private fun loopFor(location: LocationId): ShortArray = when (location) {
@@ -144,5 +161,8 @@ class Ambience(private val context: Context) {
 
     companion object {
         private const val SAMPLE_RATE = 22050
+
+        /** Faktor, auf den die Lautstärke während der Sprachausgabe sinkt. */
+        private const val DUCK_FACTOR = 0.25f
     }
 }

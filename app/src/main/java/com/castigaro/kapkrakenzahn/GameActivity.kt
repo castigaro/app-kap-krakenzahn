@@ -12,6 +12,7 @@ import com.castigaro.kapkrakenzahn.api.DialogApi
 import com.castigaro.kapkrakenzahn.api.DuelApi
 import com.castigaro.kapkrakenzahn.api.LlmClient
 import com.castigaro.kapkrakenzahn.audio.Ambience
+import com.castigaro.kapkrakenzahn.audio.Music
 import com.castigaro.kapkrakenzahn.audio.Sfx
 import com.castigaro.kapkrakenzahn.audio.Speaker
 import com.castigaro.kapkrakenzahn.data.DialogMessage
@@ -48,6 +49,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     private lateinit var inventoryAdapter: InventoryAdapter
     private lateinit var speaker: Speaker
     private lateinit var ambience: Ambience
+    private lateinit var music: Music
 
     /** Gerade zum „Benutzen mit …" ausgewählter Gegenstand. */
     private var activeItem: ItemId? = null
@@ -71,8 +73,12 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         state = loaded
         offlineDialog = !ProviderSettings.isConfigured(this)
 
-        speaker = Speaker(this)
         ambience = Ambience(this)
+        music = Music(this)
+        speaker = Speaker(this) { speaking ->
+            ambience.duck(speaking)
+            music.duck(speaking)
+        }
 
         inventoryAdapter = InventoryAdapter(state.inventory.toList()) { onInventoryTap(it) }
         binding.inventoryBar.layoutManager =
@@ -90,6 +96,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         resumedAt = System.currentTimeMillis()
         binding.sceneView.animate = true
         ambience.switchTo(state.locationId)
+        music.start()
     }
 
     override fun onPause() {
@@ -97,6 +104,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         state.playtimeMs += System.currentTimeMillis() - resumedAt
         binding.sceneView.animate = false
         ambience.stop()
+        music.stop()
         autosave()
     }
 
@@ -104,6 +112,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         super.onDestroy()
         speaker.shutdown()
         ambience.stop()
+        music.stop()
     }
 
     // ---- SceneView.Listener ------------------------------------------------

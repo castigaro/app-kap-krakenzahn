@@ -33,4 +33,28 @@ object AppSettings {
     fun setAmbienceEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean("ambienceEnabled", enabled).apply()
     }
+
+    /** Lautstärke der Hintergrundgeräusche (0..1). Bewusst leiser Standard,
+     *  damit die Sprachausgabe verständlich bleibt. */
+    fun ambienceVolume(context: Context): Float =
+        prefs(context).getFloat("ambienceVolume", 0.15f)
+
+    fun setAmbienceVolume(context: Context, volume: Float) {
+        prefs(context).edit().putFloat("ambienceVolume", volume.coerceIn(0f, 1f)).apply()
+    }
+
+    fun isMusicEnabled(context: Context): Boolean =
+        prefs(context).getBoolean("musicEnabled", true)
+
+    fun setMusicEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean("musicEnabled", enabled).apply()
+    }
+
+    /** Lautstärke der Hintergrundmusik (0..1). */
+    fun musicVolume(context: Context): Float =
+        prefs(context).getFloat("musicVolume", 0.10f)
+
+    fun setMusicVolume(context: Context, volume: Float) {
+        prefs(context).edit().putFloat("musicVolume", volume.coerceIn(0f, 1f)).apply()
+    }
 }

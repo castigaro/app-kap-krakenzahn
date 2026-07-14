@@ -49,6 +49,9 @@
     <string name="settings_tts">Sprachausgabe (Figuren vorlesen)</string>
     <string name="settings_sfx">Soundeffekte</string>
     <string name="settings_ambience">Hintergrund-Ambiente</string>
+    <string name="settings_ambience_volume">Lautstärke Hintergrundgeräusche</string>
+    <string name="settings_music">Hintergrundmusik</string>
+    <string name="settings_music_volume">Lautstärke Musik</string>
 
     <!-- Hilfe -->
     <string name="help_title">Hilfe</string>

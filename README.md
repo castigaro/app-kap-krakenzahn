@@ -42,7 +42,9 @@ Leuchtfeuer neu entzünden.
   benannte Sicherungen, zu denen man zurückkehren kann. Neues Spiel mit
   frischem Seed jederzeit möglich.
 - **Sprachausgabe (TTS)** mit figurenspezifischen Stimmen sowie
-  **synthetisierte Soundeffekte und Ambiente** — alles abschaltbar.
+  **synthetisierte Soundeffekte, Ambiente und sanfte Hintergrundmusik** —
+  alles abschaltbar, Lautstärken einstellbar; während gesprochen wird,
+  blenden Ambiente und Musik automatisch ab.
 - **Offline spielbar:** Ohne API-Key laufen die Gespräche über feste
   Ersatz-Dialoge; das Abenteuer bleibt vollständig lösbar.
 
