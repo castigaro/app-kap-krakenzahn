@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Leuchtturm mit Lichtkegel, umschlungen von einem Krakententakel -->
+    <group
+        android:scaleX="0.55"
+        android:scaleY="0.55"
+        android:translateX="24.3"
+        android:translateY="24.3">
+        <!-- Lichtkegel -->
+        <path
+            android:fillColor="#F0C169"
+            android:pathData="M50,16 L20,6 L20,14 L50,22 Z M50,16 L80,6 L80,14 L50,22 Z" />
+        <!-- Turm -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M44,24 L56,24 L62,86 L38,86 Z" />
+        <!-- Laternenraum -->
+        <path
+            android:fillColor="#F0C169"
+            android:pathData="M45,12 L55,12 L56,24 L44,24 Z" />
+        <!-- Turmstreifen -->
+        <path
+            android:fillColor="#0F6B67"
+            android:pathData="M42.5,42 L57.5,42 L58.3,52 L41.7,52 Z M40.9,62 L59.1,62 L59.9,72 L40.1,72 Z" />
+        <!-- Tentakel: schlängelt sich von unten rechts um den Turmfuß -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M92,92 C78,94 62,94 52,90 C60,88 68,87 72,84 C60,84 44,82 36,76 C34,74.5 34.8,71.5 37.5,72.5 C48,77 64,79 78,78 C84,77.6 88,80 90,84 Z" />
+        <!-- Saugnäpfe -->
+        <path
+            android:fillColor="#0F6B67"
+            android:pathData="M58,89.4 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0 M68,90.4 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0 M78,90.6 m-1.6,0 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0" />
+    </group>
+</vector>

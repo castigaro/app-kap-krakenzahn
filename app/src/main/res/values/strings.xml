@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kap Krakenzahn</string>
+
+    <!-- Hauptbildschirm -->
+    <string name="main_continue">Weiterspielen</string>
+    <string name="main_new_game">Neues Spiel</string>
+    <string name="main_no_saves">Noch keine Spielstände — starte ein neues Abenteuer!</string>
+    <string name="main_saves_heading">Spielstände</string>
+    <string name="main_delete_save_title">Spielstand löschen?</string>
+    <string name="main_delete_save_message">„%1$s" wird endgültig gelöscht.</string>
+    <string name="main_new_game_title">Neues Spiel beginnen</string>
+    <string name="main_new_game_message">Jonna strandet am Kap Krakenzahn — jeder Durchlauf verteilt Hinweise und Fundstücke neu. Ohne API-Key laufen die Gespräche mit festen Dialogen; mit Key (Einstellungen) werden sie von der KI erzählt.</string>
+    <string name="main_start">Lossegeln</string>
+    <string name="menu_settings">Einstellungen</string>
+    <string name="menu_help">Hilfe</string>
+    <string name="menu_update">Nach Update suchen</string>
+    <string name="delete">Löschen</string>
+    <string name="cancel">Abbrechen</string>
+
+    <!-- Spielbildschirm -->
+    <string name="game_menu">Menü</string>
+    <string name="game_save">Spielstand sichern</string>
+    <string name="game_saved">Spielstand gesichert.</string>
+    <string name="game_autosaved">Automatisch gespeichert</string>
+    <string name="game_quit_title">Zurück zum Hafenbüro?</string>
+    <string name="game_quit_message">Dein Fortschritt wurde automatisch gespeichert.</string>
+    <string name="game_quit_confirm">Beenden</string>
+    <string name="game_inventory_empty">Deine Taschen sind leer.</string>
+    <string name="game_use_with">Benutze %1$s mit …</string>
+    <string name="verb_look">Schau an</string>
+    <string name="verb_take">Nimm</string>
+    <string name="verb_use">Benutze</string>
+    <string name="verb_talk">Rede</string>
+    <string name="dialog_thinking">…</string>
+    <string name="dialog_offline_hint">Offline-Dialog — für lebendige KI-Gespräche einen API-Key hinterlegen.</string>
+    <string name="dialog_end">Tschüss.</string>
+    <string name="duel_title">Duell der spitzen Zungen</string>
+    <string name="duel_score">Runde %1$d — Du %2$d : %3$d Rasmus</string>
+    <string name="duel_won">Gewonnen! Rasmus verneigt sich vor deiner spitzen Zunge.</string>
+    <string name="duel_lost">Verloren! Übe deine Konter und fordere ihn erneut heraus.</string>
+    <string name="ending_title">Das Leuchtfeuer brennt!</string>
+    <string name="ending_stats">Spielzeit: %1$s\nGelöste Rätsel: %2$d von %3$d\nDein Weg: %4$s</string>
+    <string name="ending_back">Zurück zum Titel</string>
+
+    <!-- Einstellungen -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_audio_heading">Audio</string>
+    <string name="settings_tts">Sprachausgabe (Figuren vorlesen)</string>
+    <string name="settings_sfx">Soundeffekte</string>
+    <string name="settings_ambience">Hintergrund-Ambiente</string>
+
+    <!-- Hilfe -->
+    <string name="help_title">Hilfe</string>
+    <string name="help_story">Du begleitest die junge Piratin Jonna Klabauter, die am Kap Krakenzahn strandet. Das Leuchtfeuer ist erloschen, der alte Wärter verschwunden. Dein Ziel: das sagenhafte Krakenauge aus der Krakenhöhle bergen und das Leuchtfeuer neu entzünden.</string>
+    <string name="help_controls">Tippe auf den Boden, um Jonna dorthin laufen zu lassen. Tippe auf einen Gegenstand oder eine Figur, dann wähle im Menü ein Verb: „Schau an", „Nimm", „Benutze" oder „Rede". Über „Benutze" kannst du auch einen Gegenstand aus der Inventarleiste unten mit etwas in der Szene kombinieren. Pfeile am Bildrand führen zu Nachbarorten.</string>
+    <string name="help_dialog">Sprich Figuren an und wähle aus den vorgegebenen Antworten. Kluge Fragen locken Hinweise heraus, die dir bei den Rätseln helfen. Mit hinterlegtem KI-Schlüssel führen die Figuren lebendige Gespräche und kennen deinen Fortschritt; ohne Schlüssel gibt es feste Dialoge — lösbar ist das Spiel in beiden Fällen.</string>
+    <string name="help_saving">Dein Fortschritt wird nach jeder Aktion automatisch gesichert. Über „Menü → Spielstand sichern" legst du zusätzlich benannte Sicherungen an, zu denen du jederzeit zurückkehren kannst. Auf dem Startbildschirm lädst du einen Stand per Antippen, löschst ihn per langem Druck.</string>
+    <string name="help_replay">Fast jedes Rätsel hat mehrere Lösungswege. Wer welchen Hinweis kennt, wo Fundstücke liegen und welche Fragen der Wächter stellt, wird bei jedem neuen Spiel neu ausgewürfelt — dazu kommen Zufallsereignisse wie Stürme, Springfluten oder der fahrende Händler Fielo. Ein zweiter Durchgang spielt sich deutlich anders.</string>
+    <string name="help_key">In den Einstellungen kannst du einen API-Schlüssel von Anthropic oder OpenAI hinterlegen. Dann übernimmt die KI die Gespräche der Figuren. Ohne Schlüssel läuft alles über feste Dialoge — du brauchst also keinen Schlüssel, um das Abenteuer zu Ende zu spielen.</string>
+
+    <!-- Fehler -->
+    <string name="error_retry">Erneut versuchen</string>
+</resources>

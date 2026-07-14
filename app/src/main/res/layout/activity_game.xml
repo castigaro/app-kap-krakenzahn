@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.castigaro.kapkrakenzahn.render.SceneView
+        android:id="@+id/sceneView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Ortsname oben links -->
+    <TextView
+        android:id="@+id/locationLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="#66000000"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:textColor="#FFF5F1E6"
+        android:textAppearance="?attr/textAppearanceCaption" />
+
+    <!-- Menü-Button oben rechts -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonMenu"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_margin="4dp"
+        android:minWidth="0dp"
+        android:text="@string/game_menu"
+        android:textColor="#FFF5F1E6"
+        android:background="#66000000" />
+
+    <!-- Kommentar-/Beschreibungszeile -->
+    <TextView
+        android:id="@+id/commentBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="64dp"
+        android:background="#88000000"
+        android:padding="10dp"
+        android:textColor="#FFF5F1E6"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:visibility="gone" />
+
+    <!-- Inventarleiste unten -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/inventoryBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom"
+        android:background="#99101828"
+        android:clipToPadding="false"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp" />
+
+    <include
+        android:id="@+id/dialog"
+        layout="@layout/view_dialog_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <include
+        android:id="@+id/duel"
+        layout="@layout/view_duel_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</FrameLayout>

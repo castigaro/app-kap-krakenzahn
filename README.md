@@ -1,0 +1,86 @@
+# Kap Krakenzahn
+
+Ein klassisches Point-and-Click-Adventure im Stil der Piraten-Klassiker der
+90er Jahre — seitliche 2D-Ansicht, eine Heldin, die der Spieler durch die
+Spielwelt begleitet, Rätsel mit mehreren Lösungswegen und Spielfiguren, deren
+Gespräche von einem Sprachmodell (Anthropic oder OpenAI) getragen werden.
+
+Teil des AppSonar-Monorepos. Diese App ist **vorerst nicht auf appsonar.de
+gelistet** — sie erscheint nur als GitHub-**Pre-Release** zum Sideloaden und
+Testen.
+
+## Worum geht es?
+
+Die junge Möchtegern-Piratin **Jonna Klabauter** strandet am Kap Krakenzahn.
+Das Leuchtfeuer ist erloschen, der alte Leuchtturmwärter **Ansgar Sturmvogel**
+verschwunden, das Dorf verarmt zusehends. Der Legende nach speiste das
+**Krakenauge** — ein leuchtender Edelstein aus dem Schlund der See — das
+Leuchtfeuer, bis der Krake es sich zurückholte. Jonnas Ziel: das Rätsel des
+alten Wärters lösen, das Krakenauge aus der Krakenhöhle bergen und das
+Leuchtfeuer neu entzünden.
+
+## Features
+
+- **8 Schauplätze** (Hafen, Taverne, Markt, Strand, Dschungelpfad, Klippen,
+  Krakenhöhle, Leuchtturm), programmatisch als flache Cartoon-Vektorgrafik
+  gezeichnet — keine Bild-Assets.
+- **6 Rätsel mit je zwei bis drei Lösungswegen.** Fast alles lässt sich auf
+  mehreren Wegen erreichen — Werkzeug, List, Tausch, Duell oder kluges Fragen.
+- **KI-Gespräche:** Die Figuren kennen den Spielstand (was gelöst ist, was
+  fehlt, das Inventar) und antworten in ihrer Rolle. Die KI erzeugt pro
+  Gesprächszug **feste Antwortoptionen** — der Spieler tippt nie freien Text.
+  Eine strenge **Effekt-Whitelist** stellt sicher, dass die KI Hinweise geben
+  und freigeschaltete Übergaben auslösen, aber die Spiellogik nie korrumpieren
+  kann.
+- **Duell der spitzen Zungen:** ein KI-generiertes Wortgefecht im Stil der
+  90er-Klassiker als einer der Lösungswege.
+- **Wiederspielwert:** Wer welchen Hinweis kennt, wo Fundstücke liegen und
+  welche Fragen der Wächter stellt, wird pro Durchlauf per Seed neu
+  ausgewürfelt; dazu kommen **Zufallsereignisse** (Sturm, Springflut, der
+  fahrende Händler Fielo).
+- **Speichern jederzeit:** Autosave nach jeder Aktion, dazu beliebig viele
+  benannte Sicherungen, zu denen man zurückkehren kann. Neues Spiel mit
+  frischem Seed jederzeit möglich.
+- **Sprachausgabe (TTS)** mit figurenspezifischen Stimmen sowie
+  **synthetisierte Soundeffekte und Ambiente** — alles abschaltbar.
+- **Offline spielbar:** Ohne API-Key laufen die Gespräche über feste
+  Ersatz-Dialoge; das Abenteuer bleibt vollständig lösbar.
+
+## Steuerung
+
+- Auf den Boden tippen → die Heldin läuft dorthin.
+- Auf einen Gegenstand oder eine Figur tippen → nach Ankunft ein Verb wählen:
+  **Schau an**, **Nimm**, **Benutze**, **Rede**.
+- In der Inventarleiste unten einen Gegenstand antippen, dann ein Ziel in der
+  Szene (oder einen zweiten Gegenstand) → „Benutze X mit Y".
+- Pfeile am Bildrand führen zu den Nachbarorten.
+
+## Architektur
+
+| Paket | Inhalt |
+|-------|--------|
+| `world/` | Spielinhalt als Kotlin-Code: `Ids`, `Model`, `GameWorld` (Orte, Items, Figuren, Rätsel, Regeln, Kombinationen, Dialog-Whitelist), `Hints`, `FallbackDialogs`, `FallbackDuel` |
+| `game/`  | `GameEngine` (Regelanwendung), `Variation` (Seed-Randomisierung), `EventDirector` (Zufallsereignisse), `StateDigest`, `DuelController` |
+| `render/`| `SceneView` (Canvas-Engine mit Laufen/Hotspots/Verben), `HeroSprite`, `PaintKit`, `ItemIconView`, `TitleView`, `scenes/` (8 Szenen-Painter) |
+| `api/`   | `LlmClient` (Anthropic/OpenAI wie die anderen AppSonar-Apps), `DialogApi`, `DuelApi` |
+| `data/`  | `GameState`, `SaveStore` (JSON-Datei), `AppSettings` |
+| `audio/` | `Speaker` (TTS), `Sfx`, `Ambience` (synthetisiert) |
+
+Die KI-Anbindung nutzt die gemeinsame Bibliothek `common/android`
+(`ProviderSettings`, `ModelPricing`, `ProviderSettingsController`) — API-Keys
+für Anthropic/OpenAI werden wie in den anderen AppSonar-Apps in den
+Einstellungen hinterlegt.
+
+## Build & Test
+
+```bash
+cd apps/kap-krakenzahn
+./gradlew testDebugUnitTest     # Unit-Tests (Spiellogik, Speicher, KI-Parsing)
+./gradlew assembleDebug         # Debug-APK
+```
+
+Die Release-Variante wird von der CI (`.github/workflows/build-kap-krakenzahn.yml`)
+signiert gebaut und als GitHub-Pre-Release `kap-krakenzahn-latest`
+veröffentlicht. Zum Installieren auf dem Handy: APK herunterladen, öffnen und
+die Installation aus unbekannten Quellen erlauben. Für lebendige KI-Dialoge in
+den App-Einstellungen einen API-Key hinterlegen.
