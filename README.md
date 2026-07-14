@@ -5,9 +5,10 @@ Ein klassisches Point-and-Click-Adventure im Stil der Piraten-Klassiker der
 Spielwelt begleitet, Rätsel mit mehreren Lösungswegen und Spielfiguren, deren
 Gespräche von einem Sprachmodell (Anthropic oder OpenAI) getragen werden.
 
-Teil des AppSonar-Monorepos. Diese App ist **vorerst nicht auf appsonar.de
-gelistet** — sie erscheint nur als GitHub-**Pre-Release** zum Sideloaden und
-Testen.
+Teil des AppSonar-Monorepos. Die App ist auf
+[appsonar.de](https://appsonar.de) gelistet (Kategorie „Spiele &
+Geschichten"); die APK wird bei jedem Build automatisch als GitHub-Release
+veröffentlicht und von der Website verlinkt.
 
 ## Worum geht es?
 
@@ -82,7 +83,7 @@ cd apps/kap-krakenzahn
 ```
 
 Die Release-Variante wird von der CI (`.github/workflows/build-kap-krakenzahn.yml`)
-signiert gebaut und als GitHub-Pre-Release `kap-krakenzahn-latest`
+signiert gebaut und als GitHub-Release `kap-krakenzahn-latest`
 veröffentlicht. Zum Installieren auf dem Handy: APK herunterladen, öffnen und
 die Installation aus unbekannten Quellen erlauben. Für lebendige KI-Dialoge in
 den App-Einstellungen einen API-Key hinterlegen.
