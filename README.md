@@ -5,10 +5,9 @@ Ein klassisches Point-and-Click-Adventure im Stil der Piraten-Klassiker der
 Spielwelt begleitet, Rätsel mit mehreren Lösungswegen und Spielfiguren, deren
 Gespräche von einem Sprachmodell (Anthropic oder OpenAI) getragen werden.
 
-Teil des AppSonar-Monorepos. Die App ist auf
-[appsonar.de](https://appsonar.de) gelistet (Kategorie „Spiele &
-Geschichten"); die APK wird bei jedem Build automatisch als GitHub-Release
-veröffentlicht und von der Website verlinkt.
+Die App ist auf [appsonar.de](https://appsonar.de) gelistet (Kategorie
+„Spiele & Geschichten"); die APK wird bei jedem Build automatisch als
+GitHub-Release veröffentlicht und von der Website verlinkt.
 
 ## Worum geht es?
 
@@ -77,7 +76,8 @@ wählen, dann das **Ziel** antippen.
 | `data/`  | `GameState`, `SaveStore` (JSON-Datei), `AppSettings` |
 | `audio/` | `Speaker` (TTS), `Sfx`, `Ambience` (synthetisiert) |
 
-Die KI-Anbindung nutzt die gemeinsame Bibliothek `common/android`
+Die KI-Anbindung nutzt die gemeinsame Bibliothek
+[`android-apps-common`](https://github.com/castigaro/android-apps-common)
 (`ProviderSettings`, `ModelPricing`, `ProviderSettingsController`) — API-Keys
 für Anthropic/OpenAI werden wie in den anderen AppSonar-Apps in den
 Einstellungen hinterlegt.
@@ -85,13 +85,12 @@ Einstellungen hinterlegt.
 ## Build & Test
 
 ```bash
-cd apps/kap-krakenzahn
 ./gradlew testDebugUnitTest     # Unit-Tests (Spiellogik, Speicher, KI-Parsing)
 ./gradlew assembleDebug         # Debug-APK
 ```
 
-Die Release-Variante wird von der CI (`.github/workflows/build-kap-krakenzahn.yml`)
-signiert gebaut und als GitHub-Release `kap-krakenzahn-latest`
+Die Release-Variante wird von der CI (`.github/workflows/build.yml`)
+signiert gebaut und als GitHub-Release `latest` (Pre-Release)
 veröffentlicht. Zum Installieren auf dem Handy: APK herunterladen, öffnen und
 die Installation aus unbekannten Quellen erlauben. Für lebendige KI-Dialoge in
 den App-Einstellungen einen API-Key hinterlegen.

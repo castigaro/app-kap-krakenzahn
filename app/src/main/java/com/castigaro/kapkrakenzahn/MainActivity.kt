@@ -114,9 +114,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        // Nicht auf appsonar.de gelistet — die Versionsdatei liegt am
-        // GitHub-Release-Asset des Pre-Releases.
+        // Die Versionsdatei liegt am GitHub-Release-Asset (Pre-Release) dieses Repos.
         private const val VERSION_URL =
-            "https://github.com/castigaro/appsonar/releases/download/kap-krakenzahn-latest/kap-krakenzahn-version.json"
+            "https://github.com/castigaro/app-kap-krakenzahn/releases/download/latest/kap-krakenzahn-version.json"
     }
 }
