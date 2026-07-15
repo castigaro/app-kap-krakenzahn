@@ -68,8 +68,8 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     /** Verb-Schaltflächen der Leiste, gekoppelt an ihr Verb (null = Gehe zu). */
     private lateinit var verbButtons: List<Pair<VerbId?, TextView>>
 
-    /** Ob die Verbtafel über der schmalen Dauer-Leiste aufgeklappt ist. */
-    private var panelExpanded = true
+    /** Anzeigestufe der Bedienleiste (BAR_*): Tafel + Leiste, nur Leiste, nichts. */
+    private var barMode = BAR_EXPANDED
 
     /** Die letzten Meldungen für den „Verlauf"-Dialog (neueste zuerst). */
     private val recentComments = ArrayDeque<String>()
@@ -134,10 +134,17 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
         binding.sceneView.listener = this
         binding.buttonMenu.setOnClickListener { showMenu() }
-        binding.buttonPanelToggle.setOnClickListener { togglePanel() }
+        binding.buttonPanelToggle.setOnClickListener {
+            setBarMode(if (barMode == BAR_EXPANDED) BAR_ONLY else BAR_EXPANDED)
+        }
+        binding.buttonBarHide.setOnClickListener { setBarMode(BAR_HIDDEN) }
+        binding.buttonBarShow.setOnClickListener { setBarMode(BAR_ONLY) }
         binding.buttonCraft.setOnClickListener { crafting.open() }
         binding.buttonHistory.setOnClickListener { showRecentComments() }
-        setPanelExpanded(AppSettings.isPanelExpanded(this))
+        // Antippen blendet die Kommentarzeile aus — die letzten drei
+        // Meldungen stehen weiterhin im Verlauf (☰).
+        binding.commentBar.setOnClickListener { binding.commentBar.visibility = View.GONE }
+        setBarMode(AppSettings.barMode(this))
 
         enterLocation(rebindOnly = true)
     }
@@ -258,18 +265,21 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         if (crafting.isOpen) crafting.refreshInventory()
     }
 
-    /** Klappt die Verbtafel über der Dauer-Leiste auf/zu (persistiert). */
-    private fun togglePanel() {
-        setPanelExpanded(!panelExpanded)
-        AppSettings.setPanelExpanded(this, panelExpanded)
-    }
-
-    private fun setPanelExpanded(expanded: Boolean) {
-        panelExpanded = expanded
-        binding.expandedPanel.visibility = if (expanded) View.VISIBLE else View.GONE
-        binding.buttonPanelToggle.text = if (expanded) "▾" else "▴"
-        // Zugeklappt gibt es keine Verb-Wahl mehr — zurück auf „Gehe zu".
-        if (!expanded) resetVerb()
+    /** Wendet die Anzeigestufe der Bedienleiste an und merkt sie sich. */
+    private fun setBarMode(mode: Int) {
+        barMode = mode.coerceIn(BAR_EXPANDED, BAR_HIDDEN)
+        AppSettings.setBarMode(this, barMode)
+        binding.expandedPanel.visibility =
+            if (barMode == BAR_EXPANDED) View.VISIBLE else View.GONE
+        binding.bottomBar.visibility =
+            if (barMode == BAR_HIDDEN) View.GONE else View.VISIBLE
+        binding.buttonBarShow.visibility =
+            if (barMode == BAR_HIDDEN) View.VISIBLE else View.GONE
+        binding.buttonBarHide.visibility =
+            if (barMode == BAR_ONLY) View.VISIBLE else View.GONE
+        binding.buttonPanelToggle.text = if (barMode == BAR_EXPANDED) "▾" else "▴"
+        // Ohne sichtbare Verbtafel gibt es keine Verb-Wahl mehr — zurück auf „Gehe zu".
+        if (barMode != BAR_EXPANDED) resetVerb()
     }
 
     // ---- Verben & Inventar (SCUMM-Bedienleiste) ----------------------------
@@ -723,5 +733,10 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
         /** So viele Meldungen zeigt der „Verlauf"-Dialog rückwirkend. */
         private const val RECENT_COMMENTS = 3
+
+        // Anzeigestufen der Bedienleiste.
+        private const val BAR_EXPANDED = 0 // Verbtafel + Leiste
+        private const val BAR_ONLY = 1 // nur die schmale Leiste
+        private const val BAR_HIDDEN = 2 // alles ausgeblendet, nur ▴-Knopf
     }
 }

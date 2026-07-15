@@ -75,11 +75,14 @@ object AppSettings {
         prefs(context).edit().putBoolean("fullscreen", enabled).apply()
     }
 
-    /** Ob die Verbtafel über der schmalen Dauer-Leiste aufgeklappt ist. */
-    fun isPanelExpanded(context: Context): Boolean =
-        prefs(context).getBoolean("panelExpanded", true)
+    /** Anzeigestufe der Bedienleiste: 0 = Verbtafel + Leiste, 1 = nur Leiste,
+     *  2 = alles ausgeblendet. Ersetzt das alte Boolean "panelExpanded" —
+     *  der verwaiste Schlüssel bleibt harmlos in der Prefs-Datei liegen
+     *  (keine Migration nötig, Standard 0 entspricht dem alten true). */
+    fun barMode(context: Context): Int =
+        prefs(context).getInt("barMode", 0)
 
-    fun setPanelExpanded(context: Context, expanded: Boolean) {
-        prefs(context).edit().putBoolean("panelExpanded", expanded).apply()
+    fun setBarMode(context: Context, mode: Int) {
+        prefs(context).edit().putInt("barMode", mode.coerceIn(0, 2)).apply()
     }
 }

@@ -59,6 +59,22 @@
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:visibility="gone" />
 
+            <!-- Holt die ausgeblendete Leiste zurück (Stufe „ausgeblendet") -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonBarShow"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="8dp"
+                android:minWidth="0dp"
+                android:background="#66000000"
+                android:text="▴"
+                android:textColor="@color/scumm_verb"
+                android:textSize="20sp"
+                android:visibility="gone"
+                android:contentDescription="@string/bar_show" />
+
         </FrameLayout>
 
         <!-- Aufklappbare Verbtafel: Satzzeile + Verben (über der Dauer-Leiste) -->
@@ -82,12 +98,12 @@
                 android:singleLine="true"
                 android:ellipsize="end" />
 
-            <!-- Verbtafel (zwei Spalten) -->
+            <!-- Verbtafel (eine Reihe) -->
             <GridLayout
                 android:id="@+id/verbGrid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:columnCount="2">
+                android:columnCount="5">
 
                 <TextView
                     android:id="@+id/verbWalk"
@@ -116,27 +132,15 @@
             </GridLayout>
         </LinearLayout>
 
-        <!-- Schmale Dauer-Leiste: Aufklappen, Inventar, Werkbank, Verlauf -->
+        <!-- Schmale Dauer-Leiste: Auf-/Zuklappen, Inventar, Werkbank, Verlauf -->
         <LinearLayout
             android:id="@+id/bottomBar"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="44dp"
             android:background="@color/scumm_panel"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="4dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonPanelToggle"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minWidth="0dp"
-                android:paddingHorizontal="12dp"
-                android:text="▴"
-                android:textColor="@color/scumm_verb"
-                android:textSize="20sp"
-                android:contentDescription="@string/toggle_controls" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/inventoryBar"
@@ -153,9 +157,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
                 android:paddingHorizontal="10dp"
                 android:text="@string/craft_button"
-                android:textColor="@color/secondary" />
+                android:textColor="@color/secondary"
+                android:textSize="20sp"
+                android:contentDescription="@string/craft_button_desc" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonHistory"
@@ -163,9 +172,47 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
                 android:paddingHorizontal="10dp"
                 android:text="@string/history_button"
-                android:textColor="#FFF5F1E6" />
+                android:textColor="#FFF5F1E6"
+                android:textSize="20sp"
+                android:contentDescription="@string/history_button_desc" />
+
+            <!-- Chevrons ganz rechts: Verbtafel auf/zu und Leiste ausblenden -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonPanelToggle"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="8dp"
+                android:text="▴"
+                android:textColor="@color/scumm_verb"
+                android:textSize="20sp"
+                android:contentDescription="@string/toggle_controls" />
+
+            <!-- Zweite Stufe: blendet in „nur Leiste" auch die Leiste selbst aus -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonBarHide"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="8dp"
+                android:text="▾"
+                android:textColor="@color/scumm_verb"
+                android:textSize="20sp"
+                android:visibility="gone"
+                android:contentDescription="@string/bar_hide" />
         </LinearLayout>
     </LinearLayout>
 

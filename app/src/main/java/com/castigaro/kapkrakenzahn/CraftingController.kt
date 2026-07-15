@@ -3,6 +3,7 @@ package com.castigaro.kapkrakenzahn
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.castigaro.kapkrakenzahn.databinding.ViewCraftingOverlayBinding
+import com.castigaro.kapkrakenzahn.world.GameWorld
 import com.castigaro.kapkrakenzahn.world.ItemId
 
 /**
@@ -104,6 +105,20 @@ class CraftingController(
             view.setItem(slots[index])
             view.highlight = index == selectedSlot
         }
+        renderSlotNames()
+    }
+
+    /** Schreibt die eingelegten Gegenstände aus („Kräftiger Ast + Teerklumpen + …"). */
+    private fun renderSlotNames() {
+        val filled = slots.filterNotNull()
+        if (filled.isEmpty()) {
+            binding.craftSlotNames.visibility = View.GONE
+            return
+        }
+        val namen = filled.joinToString(" + ") { GameWorld.itemName(it) }
+        val offen = if (slots.any { it == null }) " + …" else ""
+        binding.craftSlotNames.text = namen + offen
+        binding.craftSlotNames.visibility = View.VISIBLE
     }
 
     private fun updateCombineState() {

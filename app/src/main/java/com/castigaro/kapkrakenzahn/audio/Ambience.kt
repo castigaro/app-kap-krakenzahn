@@ -46,7 +46,7 @@ class Ambience(private val context: Context) {
 
     /** Wendet die eingestellte Lautstärke auf den laufenden Track an. */
     fun applyVolume() {
-        val gain = AppSettings.ambienceVolume(context) *
+        val gain = AppSettings.ambienceVolume(context) * BASE_GAIN *
             (LOCATION_GAIN[current] ?: 1f) *
             (if (ducked) DUCK_FACTOR else 1f)
         runCatching { track?.setVolume(gain) }
@@ -166,6 +166,10 @@ class Ambience(private val context: Context) {
 
         /** Faktor, auf den die Lautstärke während der Sprachausgabe sinkt. */
         private const val DUCK_FACTOR = 0.25f
+
+        /** Globale Grunddämpfung: Selbst die kleinste Regler-Stufe (5 %) war
+         *  im Test noch zu laut — alle Teppiche laufen auf halber Kraft. */
+        private const val BASE_GAIN = 0.5f
 
         /** Ortsspezifische Dämpfung: Das Gassen-Gemurmel des Markts war im
          *  Test deutlich zu laut, die Taverne mit demselben Teppich nicht. */

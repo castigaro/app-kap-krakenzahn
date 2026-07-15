@@ -309,6 +309,17 @@ object PaintKit {
         (Color.blue(color) + amount).coerceIn(0, 255),
     )
 
+    /** Gleiche Farbe mit neuem Alpha (0..255). */
+    fun withAlpha(color: Int, alpha: Int): Int =
+        (alpha.coerceIn(0, 255) shl 24) or (color and 0x00FFFFFF)
+
+    /** Frisches Stroke-Paint — das geteilte [stroke] wird von den Szenen
+     *  mutiert und darf für wiederverwendbare Zeichner nicht benutzt werden. */
+    fun line(color: Int, width: Float): Paint = Paint(stroke).apply {
+        this.color = color
+        strokeWidth = width
+    }
+
     /**
      * Ein quaderartiges Rechteck mit Licht- (links) und Schattenseite (rechts)
      * — verleiht flachen Kästen einfaches Volumen. [lightFrac] = Breite der
