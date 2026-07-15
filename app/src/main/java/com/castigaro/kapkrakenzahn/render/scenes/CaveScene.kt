@@ -25,7 +25,7 @@ object CaveScene : ScenePainter {
 
         if (licht) {
             // Höhlenwände
-            PaintKit.verticalGradient(canvas, 0f, 0f, w, h, 0xFF243642.toInt(), 0xFF101A22.toInt())
+            PaintKit.ditherGradient(canvas, 0f, 0f, w, h, 0xFF243642.toInt(), 0xFF101A22.toInt(), 6)
             // Stalaktiten
             for (x in listOf(0.15f, 0.35f, 0.55f, 0.75f)) {
                 canvas.drawPath(
@@ -37,17 +37,20 @@ object CaveScene : ScenePainter {
             }
             // Boden
             canvas.drawRect(0f, h * 0.80f, w, h, PaintKit.solid(0xFF16242C.toInt()))
+            canvas.drawRect(0f, h * 0.80f, w, h * 0.815f, PaintKit.solid(0xFF20323A.toInt()))
 
-            // Opferbecken links
+            // Opferbecken links (mit Schimmer)
             canvas.drawOval(w * 0.18f, h * 0.78f, w * 0.36f, h * 0.90f, PaintKit.solid(0xFF0E3038.toInt()))
             canvas.drawOval(w * 0.21f, h * 0.80f, w * 0.33f, h * 0.87f, PaintKit.solid(0xFF1C6E6A.toInt()))
+            PaintKit.radialGlow(canvas, w * 0.27f, h * 0.835f, w * 0.09f, Color.argb(60, 60, 200, 190))
 
             // Wächterstein (Monolith mit Tentakeln + leere/gefüllte Fassung)
-            canvas.drawRect(w * 0.60f, h * 0.25f, w * 0.75f, h * 0.85f, PaintKit.solid(0xFF2A3A42.toInt()))
+            PaintKit.shadedBox(canvas, w * 0.60f, h * 0.25f, w * 0.75f, h * 0.85f, 0xFF2A3A42.toInt(), 0.2f)
             tentacle(canvas, w * 0.60f, h * 0.55f, -1f, h)
             tentacle(canvas, w * 0.75f, h * 0.60f, 1f, h)
             val hatAuge = state.has(com.castigaro.kapkrakenzahn.world.FlagId.KRAKENAUGE_ERHALTEN)
             val fassungGlow = if (hatAuge) 0 else (150 * (0.6f + 0.4f * sin(phase.toDouble()).toFloat())).toInt()
+            if (!hatAuge) PaintKit.radialGlow(canvas, w * 0.675f, h * 0.45f, h * 0.10f, Color.argb(fassungGlow, 40, 200, 190))
             canvas.drawCircle(
                 w * 0.675f, h * 0.45f, h * 0.04f,
                 PaintKit.solid(if (hatAuge) 0xFF14202A.toInt() else Color.argb(fassungGlow, 60, 220, 210)),
@@ -61,9 +64,9 @@ object CaveScene : ScenePainter {
             )
         }
 
-        // Schimmer / Lichtkegel um die Heldin (Position via heroX)
+        // Schimmer / Lichtkegel um die Heldin (folgt heroX/heroY)
         val cx = state.heroX * w
-        val cy = h * 0.82f
+        val cy = state.heroY * h
         val radius = if (licht) h * 0.55f else h * 0.22f
         val alpha = if (licht) 90 else 60
         val p = android.graphics.Paint()
@@ -72,6 +75,8 @@ object CaveScene : ScenePainter {
             Color.argb(alpha, 255, 225, 150), Color.TRANSPARENT, Shader.TileMode.CLAMP,
         )
         canvas.drawCircle(cx, cy, radius, p)
+
+        if (licht) PaintKit.vignette(canvas, w, h, 150)
     }
 
     private fun tentacle(canvas: Canvas, x: Float, y: Float, dir: Float, h: Float) {

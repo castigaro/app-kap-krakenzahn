@@ -15,14 +15,14 @@ object CliffScene : ScenePainter {
         val sturm = GameWorld.sturmAktiv(state)
 
         if (sturm) {
-            PaintKit.verticalGradient(canvas, 0f, 0f, w, h * 0.55f, 0xFF3A4453.toInt(), 0xFF6B7480.toInt())
+            PaintKit.ditherGradient(canvas, 0f, 0f, w, h * 0.55f, 0xFF3A4453.toInt(), 0xFF6B7480.toInt(), 6)
         } else {
-            PaintKit.verticalGradient(canvas, 0f, 0f, w, h * 0.55f, PaintKit.HIMMEL_TAG_OBEN, PaintKit.HIMMEL_TAG_UNTEN)
+            PaintKit.ditherGradient(canvas, 0f, 0f, w, h * 0.55f, PaintKit.HIMMEL_TAG_OBEN, PaintKit.HIMMEL_TAG_UNTEN, 6)
             PaintKit.seagull(canvas, w * 0.5f, h * 0.14f, h * 0.03f, phase * 3)
         }
 
         // Tiefe See unten
-        PaintKit.verticalGradient(canvas, 0f, h * 0.50f, w, h, PaintKit.MEER_OBEN, PaintKit.MEER_UNTEN)
+        PaintKit.ditherGradient(canvas, 0f, h * 0.50f, w, h, PaintKit.MEER_OBEN, PaintKit.MEER_UNTEN, 6)
         canvas.drawPath(PaintKit.wave(w, h * 0.55f, h * 0.75f, h * 0.015f, w * 0.3f, phase), PaintKit.solid(0x33FFFFFF))
 
         // Klippenkante (Vordergrund, links breit)
@@ -32,11 +32,19 @@ object CliffScene : ScenePainter {
             )),
             PaintKit.solid(PaintKit.FELS),
         )
+        // Grasige Kante
         canvas.drawPath(
             PaintKit.polygon(w, h, listOf(
                 0f to 0.55f, 0.55f to 0.60f, 0.55f to 0.64f, 0f to 0.60f,
             )),
             PaintKit.solid(PaintKit.LAUB_DUNKEL),
+        )
+        // Schattenkante der Klippe
+        canvas.drawPath(
+            PaintKit.polygon(w, h, listOf(
+                0.42f to 0.72f, 0.50f to 0.62f, 0.50f to 1.0f, 0.40f to 1.0f,
+            )),
+            PaintKit.solid(PaintKit.darken(PaintKit.FELS, 0.7f)),
         )
 
         // Leuchtturm-Pfad rechts
@@ -70,5 +78,7 @@ object CliffScene : ScenePainter {
                 canvas.drawLine(x, y, x - w * 0.01f, y + h * 0.05f, PaintKit.stroke)
             }
         }
+
+        PaintKit.vignette(canvas, w, h, if (sturm) 140 else 95)
     }
 }

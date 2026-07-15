@@ -23,8 +23,9 @@ Leuchtfeuer neu entzünden.
 ## Features
 
 - **8 Schauplätze** (Hafen, Taverne, Markt, Strand, Dschungelpfad, Klippen,
-  Krakenhöhle, Leuchtturm), programmatisch als flache Cartoon-Vektorgrafik
-  gezeichnet — keine Bild-Assets.
+  Krakenhöhle, Leuchtturm), programmatisch im 90er-**Pixel-Look mit Tiefe**
+  gezeichnet (Perspektivboden, Lichtstimmung, Vignette) — **keine Bild-Assets**.
+  Die Heldin läuft frei über den Boden und skaliert mit der Tiefe.
 - **6 Rätsel mit je zwei bis drei Lösungswegen.** Fast alles lässt sich auf
   mehreren Wegen erreichen — Werkzeug, List, Tausch, Duell oder kluges Fragen.
 - **KI-Gespräche:** Die Figuren kennen den Spielstand (was gelöst ist, was

@@ -308,4 +308,16 @@ object PaintKit {
         (Color.green(color) + amount).coerceIn(0, 255),
         (Color.blue(color) + amount).coerceIn(0, 255),
     )
+
+    /**
+     * Ein quaderartiges Rechteck mit Licht- (links) und Schattenseite (rechts)
+     * — verleiht flachen Kästen einfaches Volumen. [lightFrac] = Breite der
+     * Lichtkante als Bruchteil.
+     */
+    fun shadedBox(canvas: Canvas, l: Float, t: Float, r: Float, b: Float, base: Int, lightFrac: Float = 0.26f) {
+        canvas.drawRect(l, t, r, b, solid(base))
+        val wdt = r - l
+        canvas.drawRect(l, t, l + wdt * lightFrac, b, solid(lighten(base, 26)))
+        canvas.drawRect(r - wdt * lightFrac * 0.8f, t, r, b, solid(darken(base, 0.72f)))
+    }
 }

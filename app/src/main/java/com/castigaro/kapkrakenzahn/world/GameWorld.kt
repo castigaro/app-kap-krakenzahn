@@ -433,6 +433,7 @@ object GameWorld {
                     verbs = setOf(VerbId.SCHAU, VerbId.BENUTZE),
                 ),
             ),
+            walkY = 0.95f, walkFarY = 0.80f,
         ),
         Location(
             LocationId.TAVERNE, "Taverne 'Zum Ersoffenen Kraken'",
@@ -477,6 +478,7 @@ object GameWorld {
                     verbs = setOf(VerbId.SCHAU, VerbId.NIMM),
                 ),
             ),
+            walkY = 0.95f, walkFarY = 0.84f,
         ),
         Location(
             LocationId.MARKT, "Marktgasse",
@@ -533,6 +535,7 @@ object GameWorld {
                     condition = { !dornenFrei(it) },
                 ),
             ),
+            walkY = 0.95f, walkFarY = 0.78f,
         ),
         Location(
             LocationId.STRAND, "Strand mit Maras Hütte",
@@ -587,6 +590,7 @@ object GameWorld {
                     condition = { !it.has(FlagId.SEITENPFAD_ENTDECKT) },
                 ),
             ),
+            walkY = 0.95f, walkFarY = 0.74f,
         ),
         Location(
             LocationId.DSCHUNGEL, "Dschungelpfad",
@@ -652,6 +656,7 @@ object GameWorld {
                     verbs = setOf(VerbId.SCHAU),
                 ),
             ),
+            walkY = 0.95f, walkFarY = 0.84f,
         ),
         Location(
             LocationId.HOEHLE, "Krakenhöhle",
@@ -699,6 +704,7 @@ object GameWorld {
                     condition = ::hasLight,
                 ),
             ),
+            walkY = 0.94f, walkFarY = 0.84f,
         ),
         Location(
             LocationId.LEUCHTTURM, "Leuchtturm von Kap Krakenzahn",
@@ -739,6 +745,7 @@ object GameWorld {
                     condition = { it.has(FlagId.LEUCHTTURM_OFFEN) },
                 ),
             ),
+            walkY = 0.95f, walkFarY = 0.86f,
         ),
     ).associateBy { it.id }
 
