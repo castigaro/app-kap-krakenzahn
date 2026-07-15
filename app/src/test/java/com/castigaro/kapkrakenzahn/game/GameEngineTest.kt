@@ -3,10 +3,15 @@ package com.castigaro.kapkrakenzahn.game
 import com.castigaro.kapkrakenzahn.data.GameState
 import com.castigaro.kapkrakenzahn.world.FlagId
 import com.castigaro.kapkrakenzahn.world.GameWorld
+import com.castigaro.kapkrakenzahn.world.Hotspot
 import com.castigaro.kapkrakenzahn.world.ItemId
 import com.castigaro.kapkrakenzahn.world.LocationId
+import com.castigaro.kapkrakenzahn.world.NpcId
 import com.castigaro.kapkrakenzahn.world.PuzzleId
+import com.castigaro.kapkrakenzahn.world.RectFN
 import com.castigaro.kapkrakenzahn.world.VerbId
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -171,5 +176,73 @@ class GameEngineTest {
         assertTrue(s.has(FlagId.FEUER_ENTZUENDET))
         assertTrue(result.endGame)
         assertTrue(s.finished)
+    }
+
+    // ---- Werkbank: combineAll ----------------------------------------------
+
+    @Test fun `combineAll reicht Paare an combine durch`() {
+        val s = game(LocationId.HAFEN, ItemId.LATERNE, ItemId.TRANOEL)
+        val result = GameEngine.combineAll(s, listOf(ItemId.LATERNE, ItemId.TRANOEL))
+        assertTrue(result.stateChanged)
+        assertTrue(s.has(ItemId.BRENNENDE_LATERNE))
+        assertFalse(s.has(ItemId.LATERNE))
+        assertFalse(s.has(ItemId.TRANOEL))
+        assertTrue(s.has(FlagId.LICHT_LATERNE))
+    }
+
+    @Test fun `combineAll verkettet Dreier zur Fackel — Feuerstein bleibt`() {
+        // In jeder Reihenfolge: Stock+Teer → Teerfackel, +Feuerstein → Fackel.
+        val dreier = listOf(ItemId.STOCK, ItemId.TEER, ItemId.FEUERSTEIN)
+        for (i in dreier.indices) {
+            val items = dreier.drop(i) + dreier.take(i)
+            val s = game(LocationId.DSCHUNGEL, ItemId.STOCK, ItemId.TEER, ItemId.FEUERSTEIN)
+            val result = GameEngine.combineAll(s, items)
+            assertTrue(result.stateChanged)
+            assertTrue(s.has(ItemId.FACKEL))
+            assertTrue(s.has(ItemId.FEUERSTEIN)) // wird nicht verbraucht
+            assertFalse(s.has(ItemId.STOCK))
+            assertFalse(s.has(ItemId.TEER))
+            assertFalse(s.has(ItemId.TEERFACKEL))
+            assertTrue(s.has(FlagId.LICHT_FACKEL))
+        }
+    }
+
+    @Test fun `combineAll wertet Teiltreffer als Erfolg`() {
+        val s = game(LocationId.DSCHUNGEL, ItemId.STOCK, ItemId.TEER, ItemId.SEIL)
+        val result = GameEngine.combineAll(s, listOf(ItemId.STOCK, ItemId.TEER, ItemId.SEIL))
+        assertTrue(result.stateChanged)
+        assertTrue(s.has(ItemId.TEERFACKEL))
+        assertTrue(s.has(ItemId.SEIL)) // unbeteiligt, bleibt
+    }
+
+    @Test fun `combineAll ohne Treffer aendert nichts`() {
+        val s = game(LocationId.DSCHUNGEL, ItemId.MEDAILLON, ItemId.SEIL, ItemId.STOCK)
+        val result = GameEngine.combineAll(s, listOf(ItemId.MEDAILLON, ItemId.SEIL, ItemId.STOCK))
+        assertFalse(result.stateChanged)
+        assertTrue(s.has(ItemId.MEDAILLON))
+        assertTrue(s.has(ItemId.SEIL))
+        assertTrue(s.has(ItemId.STOCK))
+    }
+
+    // ---- Doppeltipp: defaultVerb -------------------------------------------
+
+    private fun hotspot(verbs: Set<VerbId>, npc: NpcId? = null) = Hotspot(
+        id = "test", name = "Test", beschreibung = "Test",
+        rect = RectFN(0f, 0f, 1f, 1f), verbs = verbs, npc = npc,
+    )
+
+    @Test fun `defaultVerb waehlt sinnvolle Standards`() {
+        assertEquals(
+            VerbId.REDE,
+            GameEngine.defaultVerb(hotspot(setOf(VerbId.SCHAU, VerbId.REDE), NpcId.YOLA)),
+        )
+        assertEquals(
+            VerbId.NIMM,
+            GameEngine.defaultVerb(hotspot(setOf(VerbId.SCHAU, VerbId.NIMM))),
+        )
+        assertEquals(
+            VerbId.SCHAU,
+            GameEngine.defaultVerb(hotspot(setOf(VerbId.SCHAU, VerbId.BENUTZE))),
+        )
     }
 }

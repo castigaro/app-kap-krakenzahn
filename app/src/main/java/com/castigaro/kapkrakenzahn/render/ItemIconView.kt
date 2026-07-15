@@ -2,6 +2,7 @@ package com.castigaro.kapkrakenzahn.render
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import com.castigaro.kapkrakenzahn.world.GameWorld
@@ -18,16 +19,31 @@ class ItemIconView @JvmOverloads constructor(
 
     private var item: ItemId? = null
 
-    fun setItem(item: ItemId) {
+    /** Goldrahmen um die Kachel — markiert den gewählten Slot bzw. Gegenstand. */
+    var highlight: Boolean = false
+        set(value) {
+            field = value
+            invalidate()
+        }
+
+    fun setItem(item: ItemId?) {
         this.item = item
-        contentDescription = GameWorld.itemName(item)
+        contentDescription = item?.let { GameWorld.itemName(it) }
         invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
-        val id = item ?: return
         val w = width.toFloat()
         val h = height.toFloat()
+        if (highlight) {
+            framePaint.strokeWidth = w * 0.06f
+            val inset = w * 0.04f
+            canvas.drawPath(
+                PaintKit.roundedRect(inset, inset, w - inset, h - inset, w * 0.18f),
+                framePaint,
+            )
+        }
+        val id = item ?: return
         val pad = w * 0.1f
         val color = colorFor(id)
 
@@ -64,6 +80,11 @@ class ItemIconView @JvmOverloads constructor(
         val g = ((color shr 8 and 0xFF) + 40).coerceAtMost(255)
         val b = ((color and 0xFF) + 40).coerceAtMost(255)
         return (0xFF shl 24) or (r shl 16) or (g shl 8) or b
+    }
+
+    private val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        color = 0xFFE0A73C.toInt()
     }
 
     companion object {

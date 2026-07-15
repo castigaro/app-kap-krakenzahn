@@ -57,4 +57,29 @@ object AppSettings {
     fun setMusicVolume(context: Context, volume: Float) {
         prefs(context).edit().putFloat("musicVolume", volume.coerceIn(0f, 1f)).apply()
     }
+
+    /** Lautstärke der Soundeffekte (0..1). Vorher fest auf voller Lautstärke;
+     *  der neue Standard senkt sie bewusst auf die Hälfte. */
+    fun sfxVolume(context: Context): Float =
+        prefs(context).getFloat("sfxVolume", 0.5f)
+
+    fun setSfxVolume(context: Context, volume: Float) {
+        prefs(context).edit().putFloat("sfxVolume", volume.coerceIn(0f, 1f)).apply()
+    }
+
+    /** Vollbild (Systemleisten ausgeblendet) im Spielbildschirm. */
+    fun isFullscreen(context: Context): Boolean =
+        prefs(context).getBoolean("fullscreen", false)
+
+    fun setFullscreen(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean("fullscreen", enabled).apply()
+    }
+
+    /** Ob die Verbtafel über der schmalen Dauer-Leiste aufgeklappt ist. */
+    fun isPanelExpanded(context: Context): Boolean =
+        prefs(context).getBoolean("panelExpanded", true)
+
+    fun setPanelExpanded(context: Context, expanded: Boolean) {
+        prefs(context).edit().putBoolean("panelExpanded", expanded).apply()
+    }
 }

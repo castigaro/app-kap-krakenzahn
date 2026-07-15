@@ -14,8 +14,12 @@ class InventoryAdapter(
 
     class VH(val binding: ItemInventoryBinding) : RecyclerView.ViewHolder(binding.root)
 
-    fun submit(list: List<ItemId>) {
+    /** Gold umrandeter Gegenstand (aktives „Benutze X mit …"). */
+    private var selected: ItemId? = null
+
+    fun submit(list: List<ItemId>, selected: ItemId? = null) {
         items = list
+        this.selected = selected
         notifyDataSetChanged()
     }
 
@@ -29,6 +33,7 @@ class InventoryAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
         holder.binding.itemIcon.setItem(item)
+        holder.binding.itemIcon.highlight = item == selected
         holder.binding.itemIcon.setOnClickListener { onClick(item) }
     }
 

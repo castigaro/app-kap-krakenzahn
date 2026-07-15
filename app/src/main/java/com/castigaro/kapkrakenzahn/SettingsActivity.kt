@@ -41,6 +41,13 @@ class SettingsActivity : AppCompatActivity() {
         binding.sliderMusicVolume.addOnChangeListener { _, value, _ ->
             AppSettings.setMusicVolume(this, value / 100f)
         }
+        binding.sliderSfxVolume.value = sliderValue(AppSettings.sfxVolume(this))
+        binding.sliderSfxVolume.addOnChangeListener { _, value, _ ->
+            AppSettings.setSfxVolume(this, value / 100f)
+        }
+
+        binding.switchFullscreen.isChecked = AppSettings.isFullscreen(this)
+        binding.switchFullscreen.setOnCheckedChangeListener { _, v -> AppSettings.setFullscreen(this, v) }
     }
 
     /** Rundet eine Lautstärke (0..1) auf das 5er-Raster des Sliders. */

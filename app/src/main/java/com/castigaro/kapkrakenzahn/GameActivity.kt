@@ -7,8 +7,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.castigaro.common.llm.ProviderSettings
 import com.castigaro.kapkrakenzahn.api.DialogApi
 import com.castigaro.kapkrakenzahn.api.DuelApi
@@ -17,10 +20,12 @@ import com.castigaro.kapkrakenzahn.audio.Ambience
 import com.castigaro.kapkrakenzahn.audio.Music
 import com.castigaro.kapkrakenzahn.audio.Sfx
 import com.castigaro.kapkrakenzahn.audio.Speaker
+import com.castigaro.kapkrakenzahn.data.AppSettings
 import com.castigaro.kapkrakenzahn.data.DialogMessage
 import com.castigaro.kapkrakenzahn.data.GameState
 import com.castigaro.kapkrakenzahn.data.SaveStore
 import com.castigaro.kapkrakenzahn.databinding.ActivityGameBinding
+import com.castigaro.kapkrakenzahn.databinding.DialogVolumeBinding
 import com.castigaro.kapkrakenzahn.game.ActionResult
 import com.castigaro.kapkrakenzahn.game.DuelController
 import com.castigaro.kapkrakenzahn.game.GameEngine
@@ -38,6 +43,7 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
+import kotlin.math.roundToInt
 
 /**
  * Der Spielbildschirm: Szene (SceneView) plus HUD, Inventar und die
@@ -62,8 +68,22 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     /** Verb-Schaltflächen der Leiste, gekoppelt an ihr Verb (null = Gehe zu). */
     private lateinit var verbButtons: List<Pair<VerbId?, TextView>>
 
-    /** Ob die SCUMM-Bedienleiste gerade sichtbar ist (per Chevron umschaltbar). */
-    private var controlsVisible = true
+    /** Ob die Verbtafel über der schmalen Dauer-Leiste aufgeklappt ist. */
+    private var panelExpanded = true
+
+    /** Die letzten Meldungen für den „Verlauf"-Dialog (neueste zuerst). */
+    private val recentComments = ArrayDeque<String>()
+
+    /** Die Werkbank zum Kombinieren von Inventar-Gegenständen. */
+    private lateinit var crafting: CraftingController
+
+    /**
+     * Ziel und Zeitpunkt der zuletzt ausgeführten Hotspot-Aktion. Stand die
+     * Heldin beim Doppeltipp schon am Ziel, führt bereits der erste Tipp die
+     * Aktion aus — der zweite darf dann nicht noch die Standard-Aktion feuern.
+     */
+    private var lastActionHotspotId: String? = null
+    private var lastActionAt = 0L
 
     /** Sobald die KI einmal ausfällt (oder kein Key), bleiben wir offline. */
     private var offlineDialog = false
@@ -93,8 +113,14 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
         inventoryAdapter = InventoryAdapter(state.inventory.toList()) { onInventoryTap(it) }
         binding.inventoryBar.layoutManager =
-            GridLayoutManager(this, 2, GridLayoutManager.HORIZONTAL, false)
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.inventoryBar.adapter = inventoryAdapter
+
+        crafting = CraftingController(
+            binding.craftOverlay,
+            inventory = { state.inventory.toList() },
+            onCombine = { onCraftCombine(it) },
+        )
 
         verbButtons = listOf(
             null to binding.verbWalk,
@@ -108,7 +134,10 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
         binding.sceneView.listener = this
         binding.buttonMenu.setOnClickListener { showMenu() }
-        binding.buttonToggleControls.setOnClickListener { toggleControls() }
+        binding.buttonPanelToggle.setOnClickListener { togglePanel() }
+        binding.buttonCraft.setOnClickListener { crafting.open() }
+        binding.buttonHistory.setOnClickListener { showRecentComments() }
+        setPanelExpanded(AppSettings.isPanelExpanded(this))
 
         enterLocation(rebindOnly = true)
     }
@@ -117,6 +146,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         super.onResume()
         resumedAt = System.currentTimeMillis()
         binding.sceneView.animate = true
+        applyFullscreen(AppSettings.isFullscreen(this))
         ambience.switchTo(state.locationId)
         music.start()
     }
@@ -154,6 +184,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         if (item != null) {
             clearActiveItem()
             apply(GameEngine.performAction(state, VerbId.BENUTZE, hotspot.id, item))
+            markHotspotAction(hotspot)
             resetVerb()
             return
         }
@@ -164,7 +195,35 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
                 else apply(GameEngine.performAction(state, VerbId.REDE, hotspot.id, null))
             else -> apply(GameEngine.performAction(state, verb, hotspot.id, null))
         }
+        if (currentVerb != null) markHotspotAction(hotspot)
         resetVerb()
+    }
+
+    override fun onHotspotDefaultAction(hotspot: Hotspot) {
+        // Explizite Wahl (Verb oder Gegenstand) gewinnt über den Doppeltipp.
+        if (activeItem != null || currentVerb != null) {
+            onHotspotReached(hotspot)
+            return
+        }
+        // Hat der erste Tipp die Aktion schon ausgeführt (Ankunft lag vor dem
+        // zweiten Tipp), ist der zweite Tipp nur noch eine gewöhnliche Ankunft.
+        val now = android.os.SystemClock.uptimeMillis()
+        val window = android.view.ViewConfiguration.getDoubleTapTimeout().toLong()
+        if (hotspot.id == lastActionHotspotId && now - lastActionAt <= window) return
+
+        when (val verb = GameEngine.defaultVerb(hotspot)) {
+            VerbId.REDE ->
+                if (hotspot.npc != null) openDialog(hotspot.npc)
+                else apply(GameEngine.performAction(state, VerbId.REDE, hotspot.id, null))
+            else -> apply(GameEngine.performAction(state, verb, hotspot.id, null))
+        }
+        markHotspotAction(hotspot)
+        resetVerb()
+    }
+
+    private fun markHotspotAction(hotspot: Hotspot) {
+        lastActionHotspotId = hotspot.id
+        lastActionAt = android.os.SystemClock.uptimeMillis()
     }
 
     override fun onExitReached(exit: Exit) {
@@ -194,14 +253,23 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     }
 
     private fun refreshInventory() {
-        inventoryAdapter.submit(state.inventory.toList())
+        inventoryAdapter.submit(state.inventory.toList(), selected = activeItem)
+        binding.buttonCraft.isEnabled = state.inventory.size >= 2
+        if (crafting.isOpen) crafting.refreshInventory()
     }
 
-    /** Blendet die Bedienleiste aus/ein — dann füllt die Szene den Bildschirm. */
-    private fun toggleControls() {
-        controlsVisible = !controlsVisible
-        binding.controlPanel.visibility = if (controlsVisible) View.VISIBLE else View.GONE
-        binding.buttonToggleControls.text = if (controlsVisible) "▾" else "▴"
+    /** Klappt die Verbtafel über der Dauer-Leiste auf/zu (persistiert). */
+    private fun togglePanel() {
+        setPanelExpanded(!panelExpanded)
+        AppSettings.setPanelExpanded(this, panelExpanded)
+    }
+
+    private fun setPanelExpanded(expanded: Boolean) {
+        panelExpanded = expanded
+        binding.expandedPanel.visibility = if (expanded) View.VISIBLE else View.GONE
+        binding.buttonPanelToggle.text = if (expanded) "▾" else "▴"
+        // Zugeklappt gibt es keine Verb-Wahl mehr — zurück auf „Gehe zu".
+        if (!expanded) resetVerb()
     }
 
     // ---- Verben & Inventar (SCUMM-Bedienleiste) ----------------------------
@@ -212,6 +280,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         activeItem = null // neues Verb bricht ein angefangenes „Benutze … mit" ab
         highlightVerbs()
         updateSentence()
+        refreshInventory()
     }
 
     /** Nach einer Handlung zurück auf „Gehe zu". */
@@ -220,6 +289,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         activeItem = null
         highlightVerbs()
         updateSentence()
+        refreshInventory()
     }
 
     private fun highlightVerbs() {
@@ -247,21 +317,18 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     }
 
     private fun onInventoryTap(item: ItemId) {
-        val pending = activeItem
         when {
-            pending == item -> resetVerb() // Auswahl aufheben
-            pending != null -> {
-                clearActiveItem()
-                apply(GameEngine.combine(state, pending, item))
-                resetVerb()
-            }
+            activeItem == item -> resetVerb() // Auswahl aufheben
             currentVerb == VerbId.SCHAU -> { comment(GameWorld.itemDescription(item)); resetVerb() }
             currentVerb == VerbId.REDE -> { comment(getString(R.string.item_no_talk, GameWorld.itemName(item))); resetVerb() }
             currentVerb == VerbId.NIMM -> { comment(getString(R.string.item_already_have, GameWorld.itemName(item))); resetVerb() }
-            else -> { // „Gehe zu" oder „Benutze": Gegenstand zum Kombinieren wählen
+            else -> {
+                // „Gehe zu" oder „Benutze": Gegenstand zum Anwenden wählen
+                // (bzw. die Auswahl wechseln). Kombiniert wird in der Werkbank.
                 activeItem = item
                 highlightVerbs()
                 updateSentence()
+                refreshInventory()
             }
         }
     }
@@ -292,7 +359,35 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     private fun comment(text: String) {
         binding.commentBar.visibility = View.VISIBLE
         binding.commentBar.text = text
+        recentComments.addFirst(text)
+        while (recentComments.size > RECENT_COMMENTS) recentComments.removeLast()
         speaker.speak(this, text, npc = null)
+    }
+
+    /** Zeigt die letzten Meldungen (neueste zuerst) — falls eine Zeile überlesen wurde. */
+    private fun showRecentComments() {
+        val text = if (recentComments.isEmpty()) {
+            getString(R.string.history_empty)
+        } else {
+            recentComments.joinToString("\n\n") { "• $it" }
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.history_title)
+            .setMessage(text)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    /** „Verbinden" der Werkbank — synchron über die statischen Kombos. */
+    private fun onCraftCombine(items: List<ItemId>) {
+        val result = GameEngine.combineAll(state, items)
+        if (result.stateChanged) {
+            crafting.close()
+            apply(result)
+        } else {
+            // Fehlversuch: Slots bleiben belegt, das Urteil erscheint im Overlay.
+            crafting.showResult(result.text)
+        }
     }
 
     private fun autosave() {
@@ -484,8 +579,14 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     // ---- Menü & Ende -------------------------------------------------------
 
     private fun showMenu() {
+        val fullscreenLabel = getString(
+            if (AppSettings.isFullscreen(this)) R.string.menu_fullscreen_off
+            else R.string.menu_fullscreen_on,
+        )
         val optionen = arrayOf(
             getString(R.string.game_save),
+            getString(R.string.menu_volume),
+            fullscreenLabel,
             getString(R.string.menu_settings),
             getString(R.string.game_quit_confirm),
         )
@@ -493,12 +594,76 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
             .setItems(optionen) { _, which ->
                 when (which) {
                     0 -> saveNamedSlot()
-                    1 -> startActivity(android.content.Intent(this, SettingsActivity::class.java))
-                    2 -> confirmQuit()
+                    1 -> showVolumeDialog()
+                    2 -> toggleFullscreen()
+                    3 -> startActivity(android.content.Intent(this, SettingsActivity::class.java))
+                    4 -> confirmQuit()
                 }
             }
             .show()
     }
+
+    // ---- Vollbild ------------------------------------------------------------
+
+    private fun toggleFullscreen() {
+        val enabled = !AppSettings.isFullscreen(this)
+        AppSettings.setFullscreen(this, enabled)
+        applyFullscreen(enabled)
+    }
+
+    private fun applyFullscreen(enabled: Boolean) {
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        if (enabled) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            WindowCompat.setDecorFitsSystemWindows(window, true)
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    // ---- Lautstärke ------------------------------------------------------------
+
+    /** Drei Regler (Musik, Ambiente, Effekte), die sofort hörbar wirken. */
+    private fun showVolumeDialog() {
+        val dialogBinding = DialogVolumeBinding.inflate(layoutInflater)
+
+        dialogBinding.sliderMusicVolume.value = sliderValue(AppSettings.musicVolume(this))
+        dialogBinding.sliderMusicVolume.addOnChangeListener { _, value, _ ->
+            AppSettings.setMusicVolume(this, value / 100f)
+            music.applyVolume()
+        }
+        dialogBinding.sliderAmbienceVolume.value = sliderValue(AppSettings.ambienceVolume(this))
+        dialogBinding.sliderAmbienceVolume.addOnChangeListener { _, value, _ ->
+            AppSettings.setAmbienceVolume(this, value / 100f)
+            ambience.applyVolume()
+        }
+        dialogBinding.sliderSfxVolume.value = sliderValue(AppSettings.sfxVolume(this))
+        dialogBinding.sliderSfxVolume.addOnChangeListener { _, value, _ ->
+            AppSettings.setSfxVolume(this, value / 100f)
+        }
+        // Hörprobe beim Loslassen des Effekte-Reglers.
+        dialogBinding.sliderSfxVolume.addOnSliderTouchListener(
+            object : com.google.android.material.slider.Slider.OnSliderTouchListener {
+                override fun onStartTrackingTouch(slider: com.google.android.material.slider.Slider) {}
+                override fun onStopTrackingTouch(slider: com.google.android.material.slider.Slider) {
+                    Sfx.play(this@GameActivity, "blip")
+                }
+            },
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.menu_volume)
+            .setView(dialogBinding.root)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    /** Rundet eine Lautstärke (0..1) auf das 5er-Raster der Slider. */
+    private fun sliderValue(volume: Float): Float =
+        ((volume * 100 / 5).roundToInt() * 5).coerceIn(0, 100).toFloat()
 
     private fun saveNamedSlot() {
         val stamp = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date())
@@ -537,6 +702,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         when {
             binding.duel.root.visibility == View.VISIBLE -> Unit // Duell muss zu Ende
             binding.dialog.root.visibility == View.VISIBLE -> closeDialog()
+            crafting.isOpen -> crafting.close()
             else -> confirmQuit()
         }
     }
@@ -554,5 +720,8 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
     companion object {
         const val EXTRA_SAVE_ID = "save_id"
+
+        /** So viele Meldungen zeigt der „Verlauf"-Dialog rückwirkend. */
+        private const val RECENT_COMMENTS = 3
     }
 }

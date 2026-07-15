@@ -22,7 +22,7 @@ object Sfx {
     fun play(context: Context, name: String) {
         if (!AppSettings.isSfxEnabled(context)) return
         val pcm = clips[name] ?: return
-        runCatching { emit(pcm) }
+        runCatching { emit(pcm, AppSettings.sfxVolume(context)) }
     }
 
     private val clips: Map<String, ShortArray> by lazy {
@@ -100,7 +100,7 @@ object Sfx {
         return a * decay
     }
 
-    private fun emit(pcm: ShortArray) {
+    private fun emit(pcm: ShortArray, gain: Float) {
         val track = AudioTrack.Builder()
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -119,6 +119,7 @@ object Sfx {
             .setTransferMode(AudioTrack.MODE_STATIC)
             .build()
         track.write(pcm, 0, pcm.size)
+        track.setVolume(gain)
         track.setNotificationMarkerPosition(pcm.size)
         track.setPlaybackPositionUpdateListener(object : AudioTrack.OnPlaybackPositionUpdateListener {
             override fun onMarkerReached(t: AudioTrack?) {

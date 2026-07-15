@@ -50,6 +50,22 @@
     <string name="ending_stats">Spielzeit: %1$s\nGelöste Rätsel: %2$d von %3$d\nDein Weg: %4$s</string>
     <string name="ending_back">Zurück zum Titel</string>
 
+    <!-- Werkbank -->
+    <string name="craft_button">⚒ Werkbank</string>
+    <string name="craft_title">Werkbank</string>
+    <string name="craft_hint">Lege 2–3 Gegenstände in die Slots und verbinde sie zu etwas Neuem.</string>
+    <string name="craft_combine">Verbinden</string>
+
+    <!-- Verlauf der letzten Meldungen -->
+    <string name="history_button">Verlauf</string>
+    <string name="history_title">Letzte Meldungen</string>
+    <string name="history_empty">Noch keine Meldungen.</string>
+
+    <!-- Spielmenü -->
+    <string name="menu_volume">Lautstärke</string>
+    <string name="menu_fullscreen_on">Vollbild einschalten</string>
+    <string name="menu_fullscreen_off">Vollbild ausschalten</string>
+
     <!-- Einstellungen -->
     <string name="settings_title">Einstellungen</string>
     <string name="settings_audio_heading">Audio</string>
@@ -59,11 +75,13 @@
     <string name="settings_ambience_volume">Lautstärke Hintergrundgeräusche</string>
     <string name="settings_music">Hintergrundmusik</string>
     <string name="settings_music_volume">Lautstärke Musik</string>
+    <string name="settings_sfx_volume">Lautstärke Soundeffekte</string>
+    <string name="settings_fullscreen">Vollbild-Standard</string>
 
     <!-- Hilfe -->
     <string name="help_title">Hilfe</string>
     <string name="help_story">Du begleitest die junge Piratin Jonna Klabauter, die am Kap Krakenzahn strandet. Das Leuchtfeuer ist erloschen, der alte Wärter verschwunden. Dein Ziel: das sagenhafte Krakenauge aus der Krakenhöhle bergen und das Leuchtfeuer neu entzünden.</string>
-    <string name="help_controls">Wähle unten in der Leiste ein Verb — „Gehe zu", „Schau an", „Nimm", „Benutze" oder „Rede mit" — und tippe dann das Ziel in der Szene an; Jonna läuft hin und führt es aus. „Gehe zu" ist voreingestellt, ein Tipp auf den Boden lässt sie einfach dorthin laufen. Für „Benutze X mit Y" erst „Benutze" wählen, dann einen Gegenstand im Inventar rechts antippen und schließlich das Ziel (in der Szene oder ein zweiter Gegenstand). Pfeile am Bildrand führen zu Nachbarorten.</string>
+    <string name="help_controls">Wähle in der aufklappbaren Verbtafel ein Verb — „Gehe zu", „Schau an", „Nimm", „Benutze" oder „Rede mit" — und tippe dann das Ziel in der Szene an; Jonna läuft hin und führt es aus. „Gehe zu" ist voreingestellt, ein Tipp auf den Boden lässt sie einfach dorthin laufen. Ein Doppeltipp löst direkt die passende Aktion aus: Bei Personen „Rede mit", bei Aufnehmbarem „Nimm", sonst „Schau an". Um einen Gegenstand anzuwenden, tippst du ihn im Inventar an (goldener Rahmen) und dann das Ziel in der Szene — auch aufs Geben an Personen. Kombiniert wird in der Werkbank (⚒): 2–3 Gegenstände in die Slots legen und „Verbinden". Der Knopf „Verlauf" zeigt die letzten Meldungen, ▴/▾ klappt die Verbtafel ein und aus. Pfeile am Bildrand führen zu Nachbarorten.</string>
     <string name="help_dialog">Sprich Figuren an und wähle aus den vorgegebenen Antworten. Kluge Fragen locken Hinweise heraus, die dir bei den Rätseln helfen. Mit hinterlegtem KI-Schlüssel führen die Figuren lebendige Gespräche und kennen deinen Fortschritt; ohne Schlüssel gibt es feste Dialoge — lösbar ist das Spiel in beiden Fällen.</string>
     <string name="help_saving">Dein Fortschritt wird nach jeder Aktion automatisch gesichert. Über „Menü → Spielstand sichern" legst du zusätzlich benannte Sicherungen an, zu denen du jederzeit zurückkehren kannst. Auf dem Startbildschirm lädst du einen Stand per Antippen, löschst ihn per langem Druck.</string>
     <string name="help_replay">Fast jedes Rätsel hat mehrere Lösungswege. Wer welchen Hinweis kennt, wo Fundstücke liegen und welche Fragen der Wächter stellt, wird bei jedem neuen Spiel neu ausgewürfelt — dazu kommen Zufallsereignisse wie Stürme, Springfluten oder der fahrende Händler Fielo. Ein zweiter Durchgang spielt sich deutlich anders.</string>

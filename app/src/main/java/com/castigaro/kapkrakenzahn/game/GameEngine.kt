@@ -4,6 +4,7 @@ import com.castigaro.kapkrakenzahn.data.GameState
 import com.castigaro.kapkrakenzahn.world.Effect
 import com.castigaro.kapkrakenzahn.world.FlagId
 import com.castigaro.kapkrakenzahn.world.GameWorld
+import com.castigaro.kapkrakenzahn.world.Hotspot
 import com.castigaro.kapkrakenzahn.world.ItemId
 import com.castigaro.kapkrakenzahn.world.LocationId
 import com.castigaro.kapkrakenzahn.world.NpcId
@@ -75,6 +76,75 @@ object GameEngine {
             "${GameWorld.itemName(a)} und ${GameWorld.itemName(b)}? Nette Idee, aber nein.",
         )
         return applyEffects(state, combo.effects, combo.text)
+    }
+
+    /**
+     * Kombiniert 2–3 Inventar-Gegenstände (Werkbank). Bei dreien werden
+     * Paar-Kombos verkettet: Das Zwischenergebnis wandert zurück in den
+     * Pool, sodass z. B. Stock+Teer+Feuerstein in einem Zug die brennende
+     * Fackel ergeben. Der Pool wird aus den Kombo-Effekten fortgeschrieben,
+     * denn manche Kombos verbrauchen nur einen der beiden Teile (der
+     * Feuerstein überlebt das Entzünden). Kein Treffer → Fehltext ohne
+     * Zustandsänderung; ein Teiltreffer zählt als Erfolg.
+     */
+    fun combineAll(state: GameState, items: List<ItemId>): ActionResult {
+        if (items.size == 2) return combine(state, items[0], items[1])
+
+        val pool = items.toMutableList()
+        val texts = mutableListOf<String>()
+        val sfx = mutableListOf<String>()
+        var moveTo: LocationId? = null
+        var startDialog: NpcId? = null
+        var startDuel: NpcId? = null
+        var startRiddle = false
+        var endGame = false
+        var rounds = 0
+
+        while (rounds < GameWorld.combos.size + items.size) {
+            val combo = GameWorld.combos.firstOrNull { it.a in pool && it.b in pool } ?: break
+            val result = applyEffects(state, combo.effects, combo.text)
+            combo.effects.forEach { effect ->
+                when (effect) {
+                    is Effect.RemoveItem -> pool.remove(effect.item)
+                    is Effect.AddItem -> pool.add(effect.item)
+                    else -> Unit
+                }
+            }
+            texts.add(result.text)
+            sfx.addAll(result.sfx)
+            result.moveTo?.let { moveTo = it }
+            result.startDialog?.let { startDialog = it }
+            result.startDuel?.let { startDuel = it }
+            startRiddle = startRiddle || result.startRiddle
+            endGame = endGame || result.endGame
+            rounds += 1
+        }
+
+        if (texts.isEmpty()) {
+            val namen = items.dropLast(1).joinToString(", ") { GameWorld.itemName(it) } +
+                " und " + GameWorld.itemName(items.last())
+            return ActionResult("$namen? Nette Idee, aber nein.")
+        }
+        return ActionResult(
+            text = texts.joinToString(" "),
+            moveTo = moveTo,
+            startDialog = startDialog,
+            startDuel = startDuel,
+            startRiddle = startRiddle,
+            sfx = sfx,
+            endGame = endGame,
+            stateChanged = true,
+        )
+    }
+
+    /**
+     * Standard-Verb eines Hotspots für den Doppeltipp: Figuren wird
+     * zugehört, Nehmbares genommen, alles andere angeschaut.
+     */
+    fun defaultVerb(hotspot: Hotspot): VerbId = when {
+        hotspot.npc != null -> VerbId.REDE
+        VerbId.NIMM in hotspot.verbs -> VerbId.NIMM
+        else -> VerbId.SCHAU
     }
 
     /**

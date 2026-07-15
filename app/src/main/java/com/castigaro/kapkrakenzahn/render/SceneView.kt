@@ -11,6 +11,7 @@ import com.castigaro.kapkrakenzahn.data.GameState
 import com.castigaro.kapkrakenzahn.world.Exit
 import com.castigaro.kapkrakenzahn.world.GameWorld
 import com.castigaro.kapkrakenzahn.world.Hotspot
+import com.castigaro.kapkrakenzahn.world.NpcId
 import kotlin.math.abs
 import kotlin.math.hypot
 
@@ -30,6 +31,9 @@ class SceneView @JvmOverloads constructor(
 
         /** Held ist beim Hotspot angekommen → aktuelles Verb ausführen. */
         fun onHotspotReached(hotspot: Hotspot)
+
+        /** Held ist nach einem Doppeltipp angekommen → Standard-Aktion ausführen. */
+        fun onHotspotDefaultAction(hotspot: Hotspot) {}
 
         /** Held ist an einem Ausgang angekommen. */
         fun onExitReached(exit: Exit)
@@ -54,6 +58,14 @@ class SceneView @JvmOverloads constructor(
     private var pendingHotspot: Hotspot? = null
     private var pendingExit: Exit? = null
 
+    // Doppeltipp-Erkennung: zweiter Tipp auf denselben Hotspot innerhalb des
+    // Zeitfensters löst bei Ankunft die Standard-Aktion statt „Gehe zu" aus.
+    private var lastTapHotspotId: String? = null
+    private var lastTapAt = 0L
+    private var defaultOnArrive = false
+    private val doubleTapWindow =
+        android.view.ViewConfiguration.getDoubleTapTimeout().toLong()
+
     private var lastFrame = 0L
     private val startTime = System.currentTimeMillis()
 
@@ -73,10 +85,12 @@ class SceneView @JvmOverloads constructor(
     private val heightAtTop = 0.18f   // ganz hinten
     private val heightAtBottom = 0.36f // ganz vorn
 
-    private fun heroHeightNorm(): Float {
-        val t = ((heroY - refTopY) / (refBottomY - refTopY)).coerceIn(0f, 1f)
+    private fun heightNormAt(y: Float): Float {
+        val t = ((y - refTopY) / (refBottomY - refTopY)).coerceIn(0f, 1f)
         return heightAtTop + (heightAtBottom - heightAtTop) * t
     }
+
+    private fun heroHeightNorm(): Float = heightNormAt(heroY)
 
     // Pixel-Look: Szene wird in einen niedrig aufgelösten Puffer gemalt und
     // mit Nearest-Neighbor auf die View hochskaliert (kein FILTER_BITMAP).
@@ -109,6 +123,8 @@ class SceneView @JvmOverloads constructor(
         walking = false
         pendingHotspot = null
         pendingExit = null
+        lastTapHotspotId = null
+        defaultOnArrive = false
         invalidate()
     }
 
@@ -134,12 +150,21 @@ class SceneView @JvmOverloads constructor(
         val hotspot = GameWorld.hotspotsFor(s, s.locationId)
             .firstOrNull { it.rect.contains(nx, ny) }
         if (hotspot != null) {
+            val now = android.os.SystemClock.uptimeMillis()
+            val isDouble = hotspot.id == lastTapHotspotId && now - lastTapAt <= doubleTapWindow
+            lastTapHotspotId = hotspot.id
+            lastTapAt = now
             listener?.onHotspotTargeted(hotspot)
+            // Steht die Heldin schon am Ziel, kommt die „Ankunft" im nächsten
+            // Frame (dist < 1e-4) — der Doppeltipp braucht daher keinen Timer.
             walkTo(hotspot.anchorX, hotspot.anchorY ?: clampToBand(hotspot.rect.bottom))
             pendingHotspot = hotspot
             pendingExit = null
+            defaultOnArrive = isDouble
             return true
         }
+        lastTapHotspotId = null
+        defaultOnArrive = false
         // Ausgänge (Pfeile am Rand, unterer Bereich)
         val exit = GameWorld.exitsFor(s, s.locationId)
             .firstOrNull { abs(nx - it.xNorm) < 0.08f && ny > 0.45f }
@@ -185,6 +210,12 @@ class SceneView @JvmOverloads constructor(
         // Ausgangs-Pfeile
         drawExits(bc, s, w, h)
 
+        // Sichtbare NPC-Figuren einsammeln (Bedingungen wie Licht/Ereignis
+        // stecken schon in hotspotsFor; Krächz malt die Hafenszene selbst).
+        val npcs = GameWorld.hotspotsFor(s, s.locationId)
+            .filter { it.npc != null && it.npc != NpcId.KRAECHZ }
+            .map { it to NpcSprite.placement(it) }
+
         // Held frei über die Boden-Bande bewegen (diagonal zum Zielpunkt).
         if (walking) {
             val dt = (now - lastFrame).coerceAtMost(64L) / 1000f
@@ -207,11 +238,17 @@ class SceneView @JvmOverloads constructor(
             }
         }
 
+        // Maler-Reihenfolge: NPCs hinter der Heldin zuerst, davor stehende danach.
+        val elapsed = now - startTime
+        npcs.filter { it.second.groundY <= heroY }.forEach { drawNpc(bc, w, h, it, elapsed) }
+
         // Heldin am Bodenpunkt, Größe nach Tiefe skaliert.
         HeroSprite.draw(
             bc, w, h, heroX, heroY, heightNorm = heroHeightNorm(),
             phase = walkPhase, facingRight = facingRight, walking = walking,
         )
+
+        npcs.filter { it.second.groundY > heroY }.forEach { drawNpc(bc, w, h, it, elapsed) }
 
         // … und pixelscharf hochskalieren.
         canvas.drawBitmap(bmp, srcRect(bmp), dstRect(), blitPaint)
@@ -236,10 +273,30 @@ class SceneView @JvmOverloads constructor(
             if (value) postInvalidateOnAnimation()
         }
 
+    /** Malt eine NPC-Figur; eine optionale Sichtkante klippt den Unterkörper
+     *  (Griet hinter der Theke). */
+    private fun drawNpc(
+        canvas: Canvas, w: Float, h: Float,
+        npc: Pair<Hotspot, NpcSprite.Placement>, timeMs: Long,
+    ) {
+        val (hotspot, place) = npc
+        val id = hotspot.npc ?: return
+        val clip = place.clipBottomNorm
+        if (clip != null) {
+            canvas.save()
+            canvas.clipRect(0f, 0f, w, clip * h)
+        }
+        NpcSprite.draw(canvas, w, h, id, place.x, place.groundY, heightNormAt(place.groundY), timeMs)
+        if (clip != null) canvas.restore()
+    }
+
     private fun arriveAtTarget() {
+        val viaDoubleTap = defaultOnArrive
+        defaultOnArrive = false
         pendingHotspot?.let { hs ->
             pendingHotspot = null
-            listener?.onHotspotReached(hs)
+            if (viaDoubleTap) listener?.onHotspotDefaultAction(hs)
+            else listener?.onHotspotReached(hs)
         }
         pendingExit?.let { ex ->
             pendingExit = null
