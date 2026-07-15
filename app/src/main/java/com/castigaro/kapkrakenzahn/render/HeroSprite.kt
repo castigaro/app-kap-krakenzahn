@@ -15,10 +15,18 @@ object HeroSprite {
     private const val HAUT = 0xFFE8C9A0.toInt()
     private const val HAAR = 0xFF7A3B1E.toInt()
     private const val MANTEL = 0xFF9C2B2B.toInt()
+    private const val MANTEL_HELL = 0xFFC24242.toInt()
     private const val MANTEL_DUNKEL = 0xFF6E1D1D.toInt()
     private const val HOSE = 0xFF2E3550.toInt()
     private const val STIEFEL = 0xFF2A1C12.toInt()
     private const val HUT = 0xFF3A2418.toInt()
+
+    /** Dunkle Kontur für die Körperformen (Strichbreite je Figur gesetzt). */
+    private val outline = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        style = android.graphics.Paint.Style.STROKE
+        strokeJoin = android.graphics.Paint.Join.ROUND
+        color = 0xFF1A0E08.toInt()
+    }
 
     /**
      * Zeichnet Jonna an normierter x-Position auf der Boden-Linie [groundY].
@@ -34,6 +42,10 @@ object HeroSprite {
         val figH = heightNorm * h
         val bottom = groundY * h
 
+        // Weicher Kontaktschatten am Boden — verankert die Figur im Raum.
+        val shadowSquash = if (walking) 0.9f + 0.1f * abs(sin(phase.toDouble())).toFloat() else 1f
+        PaintKit.softShadow(canvas, cx, bottom, figH * 0.22f * shadowSquash, figH * 0.05f, alpha = 90)
+
         canvas.save()
         canvas.translate(cx, bottom)
         if (!facingRight) canvas.scale(-1f, 1f)
@@ -41,6 +53,9 @@ object HeroSprite {
         val swing = if (walking) sin(phase.toDouble()).toFloat() else 0f
         val bob = if (walking) abs(sin(phase.toDouble())).toFloat() * figH * 0.02f else 0f
         canvas.translate(0f, -bob)
+
+        // Dünne dunkle Kontur für alle Körperformen (Pixel-Look).
+        outline.strokeWidth = figH * 0.03f
 
         val legW = figH * 0.12f
         val legTop = -figH * 0.42f
@@ -58,6 +73,15 @@ object HeroSprite {
             close()
         }
         canvas.drawPath(body, PaintKit.solid(MANTEL))
+        // Lichtseite (vorne links) als schmaler Streifen.
+        val licht = Path().apply {
+            moveTo(-figH * 0.16f, -figH * 0.86f)
+            lineTo(-figH * 0.20f, -figH * 0.40f)
+            lineTo(-figH * 0.10f, -figH * 0.40f)
+            lineTo(-figH * 0.08f, -figH * 0.84f)
+            close()
+        }
+        canvas.drawPath(licht, PaintKit.solid(MANTEL_HELL))
         // Mantelschoß-Schatten
         val schoss = Path().apply {
             moveTo(figH * 0.04f, -figH * 0.40f)
@@ -66,6 +90,7 @@ object HeroSprite {
             close()
         }
         canvas.drawPath(schoss, PaintKit.solid(MANTEL_DUNKEL))
+        canvas.drawPath(body, outline)
 
         // Gürtel
         canvas.drawRect(-figH * 0.20f, -figH * 0.44f, figH * 0.20f, -figH * 0.40f, PaintKit.solid(HUT))
@@ -78,6 +103,7 @@ object HeroSprite {
         val headR = figH * 0.11f
         val headY = -figH * 0.86f - headR
         canvas.drawCircle(0f, headY, headR, PaintKit.solid(HAUT))
+        canvas.drawCircle(0f, headY, headR, outline)
         // Haar
         canvas.drawCircle(-headR * 0.2f, headY - headR * 0.2f, headR * 0.9f, PaintKit.solid(HAAR))
         canvas.drawCircle(0f, headY + headR * 0.05f, headR, PaintKit.solid(HAUT))

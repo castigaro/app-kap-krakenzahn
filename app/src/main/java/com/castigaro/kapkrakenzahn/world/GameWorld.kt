@@ -73,6 +73,8 @@ object GameWorld {
 
     fun itemName(id: ItemId): String = items.getValue(id).name
 
+    fun itemDescription(id: ItemId): String = items.getValue(id).beschreibung
+
     // ---- Rätsel ------------------------------------------------------------
 
     val puzzles: List<Puzzle> = listOf(

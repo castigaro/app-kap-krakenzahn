@@ -4,59 +4,135 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.castigaro.kapkrakenzahn.render.SceneView
-        android:id="@+id/sceneView"
+    <!-- Grundschicht: Szene oben, SCUMM-Bedienleiste unten -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <!-- Ortsname oben links -->
-    <TextView
-        android:id="@+id/locationLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:background="#66000000"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="4dp"
-        android:textColor="#FFF5F1E6"
-        android:textAppearance="?attr/textAppearanceCaption" />
+        <!-- Szenenbereich mit den darüberliegenden Overlays -->
+        <FrameLayout
+            android:id="@+id/sceneContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-    <!-- Menü-Button oben rechts -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonMenu"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_margin="4dp"
-        android:minWidth="0dp"
-        android:text="@string/game_menu"
-        android:textColor="#FFF5F1E6"
-        android:background="#66000000" />
+            <com.castigaro.kapkrakenzahn.render.SceneView
+                android:id="@+id/sceneView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
-    <!-- Kommentar-/Beschreibungszeile -->
-    <TextView
-        android:id="@+id/commentBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="64dp"
-        android:background="#88000000"
-        android:padding="10dp"
-        android:textColor="#FFF5F1E6"
-        android:textAppearance="?attr/textAppearanceBody2"
-        android:visibility="gone" />
+            <!-- Ortsname oben links -->
+            <TextView
+                android:id="@+id/locationLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:background="#66000000"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:textColor="#FFF5F1E6"
+                android:textAppearance="?attr/textAppearanceCaption" />
 
-    <!-- Inventarleiste unten -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/inventoryBar"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_gravity="bottom"
-        android:background="#99101828"
-        android:clipToPadding="false"
-        android:orientation="horizontal"
-        android:paddingHorizontal="8dp" />
+            <!-- Menü-Button oben rechts -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonMenu"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_margin="4dp"
+                android:minWidth="0dp"
+                android:text="@string/game_menu"
+                android:textColor="#FFF5F1E6"
+                android:background="#66000000" />
+
+            <!-- Kommentar-/Beschreibungszeile über der Leiste -->
+            <TextView
+                android:id="@+id/commentBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="#88000000"
+                android:padding="10dp"
+                android:textColor="#FFF5F1E6"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <!-- SCUMM-Bedienleiste: Satzzeile + Verbtafel + Inventar -->
+        <LinearLayout
+            android:id="@+id/controlPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/scumm_panel"
+            android:orientation="vertical"
+            android:paddingHorizontal="10dp"
+            android:paddingBottom="6dp">
+
+            <!-- Satzzeile („Benutze Laterne mit …") -->
+            <TextView
+                android:id="@+id/sentenceLine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingVertical="5dp"
+                android:textColor="@color/scumm_sentence"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Verbtafel (zwei Spalten) -->
+                <GridLayout
+                    android:id="@+id/verbGrid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <TextView
+                        android:id="@+id/verbWalk"
+                        style="@style/ScummVerb"
+                        android:text="@string/verb_walk" />
+
+                    <TextView
+                        android:id="@+id/verbLook"
+                        style="@style/ScummVerb"
+                        android:text="@string/verb_look" />
+
+                    <TextView
+                        android:id="@+id/verbTake"
+                        style="@style/ScummVerb"
+                        android:text="@string/verb_take" />
+
+                    <TextView
+                        android:id="@+id/verbUse"
+                        style="@style/ScummVerb"
+                        android:text="@string/verb_use" />
+
+                    <TextView
+                        android:id="@+id/verbTalk"
+                        style="@style/ScummVerb"
+                        android:text="@string/verb_talk" />
+                </GridLayout>
+
+                <!-- Inventar rechts -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/inventoryBar"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:background="@color/scumm_inv_bg"
+                    android:clipToPadding="false"
+                    android:padding="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
 
     <include
         android:id="@+id/dialog"

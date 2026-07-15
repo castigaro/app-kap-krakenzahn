@@ -3,10 +3,12 @@ package com.castigaro.kapkrakenzahn
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.castigaro.common.llm.ProviderSettings
 import com.castigaro.kapkrakenzahn.api.DialogApi
 import com.castigaro.kapkrakenzahn.api.DuelApi
@@ -54,6 +56,12 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     /** Gerade zum „Benutzen mit …" ausgewählter Gegenstand. */
     private var activeItem: ItemId? = null
 
+    /** Aktuell gewähltes Verb der Bedienleiste; null = „Gehe zu" (nur Laufen). */
+    private var currentVerb: VerbId? = null
+
+    /** Verb-Schaltflächen der Leiste, gekoppelt an ihr Verb (null = Gehe zu). */
+    private lateinit var verbButtons: List<Pair<VerbId?, TextView>>
+
     /** Sobald die KI einmal ausfällt (oder kein Key), bleiben wir offline. */
     private var offlineDialog = false
 
@@ -82,8 +90,18 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
         inventoryAdapter = InventoryAdapter(state.inventory.toList()) { onInventoryTap(it) }
         binding.inventoryBar.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            GridLayoutManager(this, 2, GridLayoutManager.HORIZONTAL, false)
         binding.inventoryBar.adapter = inventoryAdapter
+
+        verbButtons = listOf(
+            null to binding.verbWalk,
+            VerbId.SCHAU to binding.verbLook,
+            VerbId.NIMM to binding.verbTake,
+            VerbId.BENUTZE to binding.verbUse,
+            VerbId.REDE to binding.verbTalk,
+        )
+        verbButtons.forEach { (verb, view) -> view.setOnClickListener { selectVerb(verb) } }
+        selectVerb(null) // Default: „Gehe zu"
 
         binding.sceneView.listener = this
         binding.buttonMenu.setOnClickListener { showMenu() }
@@ -117,14 +135,32 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
     // ---- SceneView.Listener ------------------------------------------------
 
+    override fun onHotspotTargeted(hotspot: Hotspot) {
+        // Held läuft noch — Satzzeile schon mit dem Ziel vervollständigen.
+        val item = activeItem
+        binding.sentenceLine.text = if (item != null) {
+            getString(R.string.game_use_with_target, GameWorld.itemName(item), hotspot.name)
+        } else {
+            getString(R.string.sentence_verb_target, verbLabel(currentVerb), hotspot.name)
+        }
+    }
+
     override fun onHotspotReached(hotspot: Hotspot) {
         val item = activeItem
         if (item != null) {
             clearActiveItem()
             apply(GameEngine.performAction(state, VerbId.BENUTZE, hotspot.id, item))
+            resetVerb()
             return
         }
-        showVerbPopup(hotspot)
+        when (val verb = currentVerb) {
+            null -> Unit // „Gehe zu": Held ist nur hingelaufen.
+            VerbId.REDE ->
+                if (hotspot.npc != null) openDialog(hotspot.npc)
+                else apply(GameEngine.performAction(state, VerbId.REDE, hotspot.id, null))
+            else -> apply(GameEngine.performAction(state, verb, hotspot.id, null))
+        }
+        resetVerb()
     }
 
     override fun onExitReached(exit: Exit) {
@@ -139,7 +175,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     }
 
     override fun onWalkOnly() {
-        clearActiveItem()
+        resetVerb()
     }
 
     // ---- Ort betreten / Rendering ------------------------------------------
@@ -150,30 +186,49 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
         binding.locationLabel.text = GameWorld.location(state.locationId).name
         ambience.switchTo(state.locationId)
         refreshInventory()
+        resetVerb()
     }
 
     private fun refreshInventory() {
         inventoryAdapter.submit(state.inventory.toList())
     }
 
-    // ---- Verben & Inventar -------------------------------------------------
+    // ---- Verben & Inventar (SCUMM-Bedienleiste) ----------------------------
 
-    private fun showVerbPopup(hotspot: Hotspot) {
-        val verbs = hotspot.verbs.toList()
-        val labels = verbs.map { verbLabel(it) }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle(hotspot.name)
-            .setItems(labels) { _, which ->
-                when (verbs[which]) {
-                    VerbId.REDE -> hotspot.npc?.let { openDialog(it) }
-                    VerbId.BENUTZE -> apply(GameEngine.performAction(state, VerbId.BENUTZE, hotspot.id, null))
-                    else -> apply(GameEngine.performAction(state, verbs[which], hotspot.id, null))
-                }
-            }
-            .show()
+    /** Ein Verb der Leiste wählen; null = „Gehe zu". */
+    private fun selectVerb(verb: VerbId?) {
+        currentVerb = verb
+        activeItem = null // neues Verb bricht ein angefangenes „Benutze … mit" ab
+        highlightVerbs()
+        updateSentence()
     }
 
-    private fun verbLabel(verb: VerbId): String = when (verb) {
+    /** Nach einer Handlung zurück auf „Gehe zu". */
+    private fun resetVerb() {
+        currentVerb = null
+        activeItem = null
+        highlightVerbs()
+        updateSentence()
+    }
+
+    private fun highlightVerbs() {
+        val usingItem = activeItem != null
+        verbButtons.forEach { (verb, view) ->
+            val active = if (usingItem) verb == VerbId.BENUTZE else verb == currentVerb
+            val color = if (active) R.color.scumm_verb_active else R.color.scumm_verb
+            view.setTextColor(ContextCompat.getColor(this, color))
+        }
+    }
+
+    /** Satzzeile aus aktuellem Verb und (optional) gewähltem Gegenstand. */
+    private fun updateSentence() {
+        binding.sentenceLine.text = activeItem?.let {
+            getString(R.string.game_use_with, GameWorld.itemName(it))
+        } ?: verbLabel(currentVerb)
+    }
+
+    private fun verbLabel(verb: VerbId?): String = when (verb) {
+        null -> getString(R.string.verb_walk)
         VerbId.SCHAU -> getString(R.string.verb_look)
         VerbId.NIMM -> getString(R.string.verb_take)
         VerbId.BENUTZE -> getString(R.string.verb_use)
@@ -181,16 +236,21 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     }
 
     private fun onInventoryTap(item: ItemId) {
+        val pending = activeItem
         when {
-            activeItem == null -> {
-                activeItem = item
-                comment(getString(R.string.game_use_with, GameWorld.itemName(item)))
-            }
-            activeItem == item -> clearActiveItem()
-            else -> {
-                val other = activeItem!!
+            pending == item -> resetVerb() // Auswahl aufheben
+            pending != null -> {
                 clearActiveItem()
-                apply(GameEngine.combine(state, other, item))
+                apply(GameEngine.combine(state, pending, item))
+                resetVerb()
+            }
+            currentVerb == VerbId.SCHAU -> { comment(GameWorld.itemDescription(item)); resetVerb() }
+            currentVerb == VerbId.REDE -> { comment(getString(R.string.item_no_talk, GameWorld.itemName(item))); resetVerb() }
+            currentVerb == VerbId.NIMM -> { comment(getString(R.string.item_already_have, GameWorld.itemName(item))); resetVerb() }
+            else -> { // „Gehe zu" oder „Benutze": Gegenstand zum Kombinieren wählen
+                activeItem = item
+                highlightVerbs()
+                updateSentence()
             }
         }
     }

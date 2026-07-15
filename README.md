@@ -51,11 +51,18 @@ Leuchtfeuer neu entzünden.
 
 ## Steuerung
 
-- Auf den Boden tippen → die Heldin läuft dorthin.
-- Auf einen Gegenstand oder eine Figur tippen → nach Ankunft ein Verb wählen:
-  **Schau an**, **Nimm**, **Benutze**, **Rede**.
-- In der Inventarleiste unten einen Gegenstand antippen, dann ein Ziel in der
-  Szene (oder einen zweiten Gegenstand) → „Benutze X mit Y".
+Klassische SCUMM-Bedienung über die Leiste am unteren Rand: erst ein **Verb**
+wählen, dann das **Ziel** antippen.
+
+- In der Leiste ein Verb wählen — **Gehe zu**, **Schau an**, **Nimm**,
+  **Benutze** oder **Rede mit** — und dann ein Ziel in der Szene antippen; die
+  Heldin läuft hin und führt es aus. Die Satzzeile darüber zeigt die Handlung
+  im Aufbau („Benutze Laterne mit …").
+- **Gehe zu** ist voreingestellt: ein Tipp auf den Boden lässt die Heldin
+  einfach dorthin laufen.
+- Für **„Benutze X mit Y"** erst *Benutze* wählen, dann einen Gegenstand in der
+  Inventarliste rechts antippen und schließlich das Ziel (in der Szene oder
+  einen zweiten Gegenstand).
 - Pfeile am Bildrand führen zu den Nachbarorten.
 
 ## Architektur

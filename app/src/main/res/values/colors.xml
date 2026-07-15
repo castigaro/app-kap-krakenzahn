@@ -8,4 +8,12 @@
     <color name="ic_launcher_background">#0A4A47</color>
     <!-- Feste Toolbar-Farbe (im Dark-Mode überschrieben). -->
     <color name="toolbar_bg">#0F6B67</color>
+
+    <!-- SCUMM-Bedienleiste: bewusst in Hell wie Dunkel identisch dunkel. -->
+    <color name="scumm_panel">#0B0B0F</color>
+    <color name="scumm_panel_dark">#060608</color>
+    <color name="scumm_verb">#67C767</color>
+    <color name="scumm_verb_active">#F2ECC9</color>
+    <color name="scumm_sentence">#9FE6DE</color>
+    <color name="scumm_inv_bg">#111018</color>
 </resources>

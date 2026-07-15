@@ -3,6 +3,7 @@ package com.castigaro.kapkrakenzahn.render
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -23,7 +24,10 @@ class SceneView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     interface Listener {
-        /** Held ist bei einem Hotspot angekommen → Verben anbieten. */
+        /** Ein Hotspot wurde angetippt (Held läuft noch) → Satzzeile aktualisieren. */
+        fun onHotspotTargeted(hotspot: Hotspot) {}
+
+        /** Held ist beim Hotspot angekommen → aktuelles Verb ausführen. */
         fun onHotspotReached(hotspot: Hotspot)
 
         /** Held ist an einem Ausgang angekommen. */
@@ -52,6 +56,27 @@ class SceneView @JvmOverloads constructor(
 
     private val walkSpeed = 0.28f // Bildschirmbreiten pro Sekunde
     private val groundY get() = state?.let { GameWorld.location(it.locationId).walkY } ?: 0.86f
+
+    // Pixel-Look: Szene wird in einen niedrig aufgelösten Puffer gemalt und
+    // mit Nearest-Neighbor auf die View hochskaliert (kein FILTER_BITMAP).
+    private val pixelTargetWidth = 440
+    private var buffer: android.graphics.Bitmap? = null
+    private var bufferCanvas: Canvas? = null
+    private val blitPaint = Paint().apply { isFilterBitmap = false; isDither = false }
+
+    private fun ensureBuffer(w: Int, h: Int): android.graphics.Bitmap {
+        val bw = pixelTargetWidth
+        val bh = (pixelTargetWidth.toLong() * h / w).toInt().coerceAtLeast(1)
+        val current = buffer
+        if (current == null || current.width != bw || current.height != bh) {
+            current?.recycle()
+            val fresh = android.graphics.Bitmap.createBitmap(bw, bh, android.graphics.Bitmap.Config.ARGB_8888)
+            buffer = fresh
+            bufferCanvas = Canvas(fresh)
+            return fresh
+        }
+        return current
+    }
 
     fun bind(state: GameState) {
         this.state = state
@@ -83,6 +108,7 @@ class SceneView @JvmOverloads constructor(
         val hotspot = GameWorld.hotspotsFor(s, s.locationId)
             .firstOrNull { it.rect.contains(nx, ny) }
         if (hotspot != null) {
+            listener?.onHotspotTargeted(hotspot)
             walkTo(hotspot.anchorX)
             pendingHotspot = hotspot
             pendingExit = null
@@ -116,14 +142,21 @@ class SceneView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         val s = state ?: return
         val p = painter ?: return
-        val w = width.toFloat()
-        val h = height.toFloat()
+        if (width == 0 || height == 0) return
         val now = System.currentTimeMillis()
 
-        p.draw(canvas, w, h, s, now - startTime)
+        // In den niedrig aufgelösten Puffer malen …
+        val bmp = ensureBuffer(width, height)
+        val bc = bufferCanvas ?: return
+        val w = bmp.width.toFloat()
+        val h = bmp.height.toFloat()
+
+        // Puffer bleibt zwischen Frames bestehen — vor dem Neuzeichnen leeren.
+        bmp.eraseColor(Color.BLACK)
+        p.draw(bc, w, h, s, now - startTime)
 
         // Ausgangs-Pfeile
-        drawExits(canvas, s, w, h)
+        drawExits(bc, s, w, h)
 
         // Held bewegen
         if (walking) {
@@ -140,17 +173,27 @@ class SceneView @JvmOverloads constructor(
             }
         }
 
-        // Heldin — leicht kleiner je weiter „hinten" (höher am Boden ist hier egal, feste Bande)
+        // Heldin auf der Bodenlinie (Tiefe kommt aus dem Hintergrund).
         HeroSprite.draw(
-            canvas, w, h, heroX, groundY, heightNorm = 0.32f,
+            bc, w, h, heroX, groundY, heightNorm = 0.32f,
             phase = walkPhase, facingRight = facingRight, walking = walking,
         )
+
+        // … und pixelscharf hochskalieren.
+        canvas.drawBitmap(bmp, srcRect(bmp), dstRect(), blitPaint)
 
         // Nächstes Frame anfordern — treibt Lauf- und Ambient-Animation
         // vsync-getaktet. Solange die View sichtbar ist, läuft das weiter;
         // bei pausierter Activity stellt das System das Zeichnen ein.
         if (animate) postInvalidateOnAnimation()
     }
+
+    private val srcRectCache = android.graphics.Rect()
+    private val dstRectCache = android.graphics.Rect()
+    private fun srcRect(bmp: android.graphics.Bitmap): android.graphics.Rect =
+        srcRectCache.apply { set(0, 0, bmp.width, bmp.height) }
+    private fun dstRect(): android.graphics.Rect =
+        dstRectCache.apply { set(0, 0, width, height) }
 
     /** Erlaubt der Activity, die Animationsschleife bei onPause anzuhalten. */
     var animate: Boolean = true
