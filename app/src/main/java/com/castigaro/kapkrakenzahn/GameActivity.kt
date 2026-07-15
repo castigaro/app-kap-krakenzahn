@@ -62,6 +62,9 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
     /** Verb-Schaltflächen der Leiste, gekoppelt an ihr Verb (null = Gehe zu). */
     private lateinit var verbButtons: List<Pair<VerbId?, TextView>>
 
+    /** Ob die SCUMM-Bedienleiste gerade sichtbar ist (per Chevron umschaltbar). */
+    private var controlsVisible = true
+
     /** Sobald die KI einmal ausfällt (oder kein Key), bleiben wir offline. */
     private var offlineDialog = false
 
@@ -105,6 +108,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
         binding.sceneView.listener = this
         binding.buttonMenu.setOnClickListener { showMenu() }
+        binding.buttonToggleControls.setOnClickListener { toggleControls() }
 
         enterLocation(rebindOnly = true)
     }
@@ -182,7 +186,7 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
     private fun enterLocation(rebindOnly: Boolean = false) {
         binding.sceneView.bind(state)
-        if (!rebindOnly) binding.sceneView.placeHero(state.heroX)
+        if (!rebindOnly) binding.sceneView.placeHero(state.heroX, state.heroY)
         binding.locationLabel.text = GameWorld.location(state.locationId).name
         ambience.switchTo(state.locationId)
         refreshInventory()
@@ -191,6 +195,13 @@ class GameActivity : AppCompatActivity(), SceneView.Listener {
 
     private fun refreshInventory() {
         inventoryAdapter.submit(state.inventory.toList())
+    }
+
+    /** Blendet die Bedienleiste aus/ein — dann füllt die Szene den Bildschirm. */
+    private fun toggleControls() {
+        controlsVisible = !controlsVisible
+        binding.controlPanel.visibility = if (controlsVisible) View.VISIBLE else View.GONE
+        binding.buttonToggleControls.text = if (controlsVisible) "▾" else "▴"
     }
 
     // ---- Verben & Inventar (SCUMM-Bedienleiste) ----------------------------

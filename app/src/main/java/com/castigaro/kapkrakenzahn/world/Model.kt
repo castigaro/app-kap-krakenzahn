@@ -36,18 +36,29 @@ class Hotspot(
     val beschreibung: String,
     val rect: RectFN,
     val anchorX: Float = rect.centerX,
+    /**
+     * Optionale Tiefe (y) der Anlaufstelle. Ist sie null, leitet die [SceneView]
+     * den Wert aus der Hotspot-Lage ab (Unterkante in die Lauf-Bande geklemmt).
+     */
+    val anchorY: Float? = null,
     val verbs: Set<VerbId> = setOf(VerbId.SCHAU),
     val npc: NpcId? = null,
     val condition: (GameState) -> Boolean = { true },
 )
 
-/** Ein Schauplatz mit seiner Lauflinie (normierte y-Bande). */
+/**
+ * Ein Schauplatz mit seiner **begehbaren Boden-Bande**: [walkY] ist die
+ * vordere Lauflinie (nah, volle Figurgröße), [walkFarY] die hintere (fern,
+ * kleiner). Die Heldin darf sich frei zwischen beiden bewegen; ihre Größe
+ * skaliert mit der Tiefe.
+ */
 class Location(
     val id: LocationId,
     val name: String,
     val exits: List<Exit>,
     val hotspots: List<Hotspot>,
     val walkY: Float = 0.86f,
+    val walkFarY: Float = walkY - 0.12f,
 )
 
 /** Auswirkung einer Spielhandlung oder eines Dialog-Zugeständnisses. */

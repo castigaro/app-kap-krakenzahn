@@ -77,6 +77,7 @@ class GameState(
     var playtimeMs: Long = 0L,
     var locationId: LocationId = LocationId.HAFEN,
     var heroX: Float = 0.5f,
+    var heroY: Float = 0.86f,
     val inventory: MutableList<ItemId> = mutableListOf(),
     val flags: MutableSet<FlagId> = mutableSetOf(),
     val revealedHints: MutableSet<HintId> = mutableSetOf(),
@@ -113,6 +114,7 @@ class GameState(
             playtimeMs = copy.playtimeMs,
             locationId = copy.locationId,
             heroX = copy.heroX,
+            heroY = copy.heroY,
             inventory = copy.inventory,
             flags = copy.flags,
             revealedHints = copy.revealedHints,
@@ -132,6 +134,7 @@ class GameState(
         put("playtimeMs", playtimeMs)
         put("locationId", locationId.name)
         put("heroX", heroX.toDouble())
+        put("heroY", heroY.toDouble())
         put("inventory", JSONArray().also { arr -> inventory.forEach { arr.put(it.name) } })
         put("flags", JSONArray().also { arr -> flags.forEach { arr.put(it.name) } })
         put("revealedHints", JSONArray().also { arr -> revealedHints.forEach { arr.put(it.name) } })
@@ -157,6 +160,7 @@ class GameState(
                 locationId = enumOrNull<LocationId>(json.optString("locationId"))
                     ?: LocationId.HAFEN,
                 heroX = json.optDouble("heroX", 0.5).toFloat(),
+                heroY = json.optDouble("heroY", 0.86).toFloat(),
                 stepCount = json.optInt("stepCount", 0),
                 finished = json.optBoolean("finished", false),
             )

@@ -622,6 +622,7 @@ object GameWorld {
                     verbs = setOf(VerbId.SCHAU, VerbId.BENUTZE),
                 ),
             ),
+            walkY = 0.95f, walkFarY = 0.72f,
         ),
         Location(
             LocationId.KLIPPEN, "Klippenpfad",

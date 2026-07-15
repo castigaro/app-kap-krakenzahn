@@ -12,6 +12,7 @@ import com.castigaro.kapkrakenzahn.world.Exit
 import com.castigaro.kapkrakenzahn.world.GameWorld
 import com.castigaro.kapkrakenzahn.world.Hotspot
 import kotlin.math.abs
+import kotlin.math.hypot
 
 /**
  * Die Spielfläche: malt den aktuellen Schauplatz plus Heldin, treibt die
@@ -42,9 +43,11 @@ class SceneView @JvmOverloads constructor(
     private var state: GameState? = null
     private var painter: ScenePainter? = null
 
-    // Lauf-Animation
+    // Lauf-Animation (frei über die begehbare Boden-Bande, x und y).
     private var heroX = 0.5f
+    private var heroY = 0.86f
     private var targetX = 0.5f
+    private var targetY = 0.86f
     private var walking = false
     private var facingRight = true
     private var walkPhase = 0f
@@ -55,7 +58,25 @@ class SceneView @JvmOverloads constructor(
     private val startTime = System.currentTimeMillis()
 
     private val walkSpeed = 0.28f // Bildschirmbreiten pro Sekunde
-    private val groundY get() = state?.let { GameWorld.location(it.locationId).walkY } ?: 0.86f
+
+    // Begehbare Boden-Bande je Ort (vorn = walkY, hinten = walkFarY).
+    private val nearY get() = state?.let { GameWorld.location(it.locationId).walkY } ?: 0.86f
+    private val farY get() = state?.let { GameWorld.location(it.locationId).walkFarY } ?: 0.74f
+
+    private fun clampToBand(y: Float): Float =
+        y.coerceIn(minOf(nearY, farY), maxOf(nearY, farY))
+
+    // Tiefenskalierung der Figur: an die absolute Bildschirm-y gekoppelt
+    // (perspektivisch konsistent, unabhängig von der Banden-Feinabstimmung).
+    private val refTopY = 0.55f       // grober Fluchthorizont
+    private val refBottomY = 1.0f
+    private val heightAtTop = 0.18f   // ganz hinten
+    private val heightAtBottom = 0.36f // ganz vorn
+
+    private fun heroHeightNorm(): Float {
+        val t = ((heroY - refTopY) / (refBottomY - refTopY)).coerceIn(0f, 1f)
+        return heightAtTop + (heightAtBottom - heightAtTop) * t
+    }
 
     // Pixel-Look: Szene wird in einen niedrig aufgelösten Puffer gemalt und
     // mit Nearest-Neighbor auf die View hochskaliert (kein FILTER_BITMAP).
@@ -82,7 +103,9 @@ class SceneView @JvmOverloads constructor(
         this.state = state
         this.painter = ScenePainter.forLocation(state.locationId)
         heroX = state.heroX
+        heroY = state.heroY
         targetX = state.heroX
+        targetY = state.heroY
         walking = false
         pendingHotspot = null
         pendingExit = null
@@ -90,11 +113,14 @@ class SceneView @JvmOverloads constructor(
     }
 
     /** Setzt die Heldin ohne Laufanimation an eine Position (nach Ortswechsel). */
-    fun placeHero(x: Float) {
+    fun placeHero(x: Float, y: Float) {
         heroX = x
+        heroY = y
         targetX = x
+        targetY = y
         walking = false
         state?.heroX = x
+        state?.heroY = y
         invalidate()
     }
 
@@ -109,7 +135,7 @@ class SceneView @JvmOverloads constructor(
             .firstOrNull { it.rect.contains(nx, ny) }
         if (hotspot != null) {
             listener?.onHotspotTargeted(hotspot)
-            walkTo(hotspot.anchorX)
+            walkTo(hotspot.anchorX, hotspot.anchorY ?: clampToBand(hotspot.rect.bottom))
             pendingHotspot = hotspot
             pendingExit = null
             return true
@@ -118,21 +144,22 @@ class SceneView @JvmOverloads constructor(
         val exit = GameWorld.exitsFor(s, s.locationId)
             .firstOrNull { abs(nx - it.xNorm) < 0.08f && ny > 0.45f }
         if (exit != null) {
-            walkTo(exit.xNorm)
+            walkTo(exit.xNorm, nearY)
             pendingExit = exit
             pendingHotspot = null
             return true
         }
-        // Sonst nur laufen
-        walkTo(nx.coerceIn(0.05f, 0.95f))
+        // Sonst frei zum getippten Punkt der Boden-Bande laufen.
+        walkTo(nx.coerceIn(0.05f, 0.95f), clampToBand(ny))
         pendingHotspot = null
         pendingExit = null
         listener?.onWalkOnly()
         return true
     }
 
-    private fun walkTo(x: Float) {
+    private fun walkTo(x: Float, y: Float) {
         targetX = x
+        targetY = clampToBand(y)
         facingRight = x >= heroX
         walking = true
         lastFrame = System.currentTimeMillis()
@@ -158,24 +185,31 @@ class SceneView @JvmOverloads constructor(
         // Ausgangs-Pfeile
         drawExits(bc, s, w, h)
 
-        // Held bewegen
+        // Held frei über die Boden-Bande bewegen (diagonal zum Zielpunkt).
         if (walking) {
             val dt = (now - lastFrame).coerceAtMost(64L) / 1000f
             lastFrame = now
-            val dir = if (targetX > heroX) 1f else -1f
-            heroX += dir * walkSpeed * dt
-            walkPhase += dt * 10f
-            if ((dir > 0 && heroX >= targetX) || (dir < 0 && heroX <= targetX)) {
+            val dx = targetX - heroX
+            val dy = targetY - heroY
+            val dist = hypot(dx, dy)
+            val step = walkSpeed * dt
+            if (dist <= step || dist < 1e-4f) {
                 heroX = targetX
+                heroY = targetY
                 walking = false
                 s.heroX = heroX
+                s.heroY = heroY
                 arriveAtTarget()
+            } else {
+                heroX += dx / dist * step
+                heroY += dy / dist * step
+                walkPhase += dt * 10f
             }
         }
 
-        // Heldin auf der Bodenlinie (Tiefe kommt aus dem Hintergrund).
+        // Heldin am Bodenpunkt, Größe nach Tiefe skaliert.
         HeroSprite.draw(
-            bc, w, h, heroX, groundY, heightNorm = 0.32f,
+            bc, w, h, heroX, heroY, heightNorm = heroHeightNorm(),
             phase = walkPhase, facingRight = facingRight, walking = walking,
         )
 

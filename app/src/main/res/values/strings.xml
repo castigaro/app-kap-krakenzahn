@@ -20,6 +20,7 @@
 
     <!-- Spielbildschirm -->
     <string name="game_menu">Menü</string>
+    <string name="toggle_controls">Bedienleiste ein-/ausblenden</string>
     <string name="game_save">Spielstand sichern</string>
     <string name="game_saved">Spielstand gesichert.</string>
     <string name="game_autosaved">Automatisch gespeichert</string>

@@ -58,6 +58,21 @@
                 android:textColor="#FFF5F1E6"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:visibility="gone" />
+
+            <!-- Bedienleiste aus-/einblenden -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonToggleControls"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="4dp"
+                android:minWidth="0dp"
+                android:text="▾"
+                android:textColor="#FFF5F1E6"
+                android:textSize="18sp"
+                android:background="#66000000"
+                android:contentDescription="@string/toggle_controls" />
         </FrameLayout>
 
         <!-- SCUMM-Bedienleiste: Satzzeile + Verbtafel + Inventar -->

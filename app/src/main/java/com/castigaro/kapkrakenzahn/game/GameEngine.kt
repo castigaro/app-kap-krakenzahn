@@ -128,6 +128,7 @@ object GameEngine {
             .firstOrNull { it.target == target }?.let { it.xNorm > 0.5f } ?: true
         state.locationId = target
         state.heroX = if (kamVonRechts) 0.08f else 0.92f
+        state.heroY = GameWorld.location(target).walkY
         state.stepCount += 1
         return EventDirector.onLocationChange(state)
     }
