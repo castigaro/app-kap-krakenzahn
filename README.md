@@ -94,3 +94,12 @@ signiert gebaut und als GitHub-Release `latest` (Pre-Release)
 veröffentlicht. Zum Installieren auf dem Handy: APK herunterladen, öffnen und
 die Installation aus unbekannten Quellen erlauben. Für lebendige KI-Dialoge in
 den App-Einstellungen einen API-Key hinterlegen.
+
+## Lizenz
+
+Copyright © 2026 Torsten Klein
+
+Dieses Projekt steht unter der **GNU Affero General Public License v3.0 oder
+später** (AGPL-3.0-or-later), siehe [LICENSE](LICENSE): Wer den Code — auch als
+Netzwerkdienst — weiterverwendet oder verändert, muss den Quellcode unter
+derselben Lizenz offenlegen. Eine kommerzielle Lizenz ist auf Anfrage möglich.
