@@ -17,7 +17,7 @@
             android:layout_height="?attr/actionBarSize"
             app:title="@string/app_name" />
 
-        <com.castigaro.kapkrakenzahn.render.TitleView
+        <com.appsonar.kapkrakenzahn.render.TitleView
             android:id="@+id/titleView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
