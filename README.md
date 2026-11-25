@@ -77,7 +77,7 @@ wählen, dann das **Ziel** antippen.
 | `audio/` | `Speaker` (TTS), `Sfx`, `Ambience` (synthetisiert) |
 
 Die KI-Anbindung nutzt die gemeinsame Bibliothek
-[`android-apps-common`](https://github.com/appsonar/android-apps-common)
+[`android-apps-common`](https://github.com/castigaro/android-apps-common)
 (`ProviderSettings`, `ModelPricing`, `ProviderSettingsController`) — API-Keys
 für Anthropic/OpenAI werden wie in den anderen AppSonar-Apps in den
 Einstellungen hinterlegt.
